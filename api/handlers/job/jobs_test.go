@@ -1,6 +1,8 @@
 package job
 
 import (
+	"testing"
+
 	radixUtils "github.com/equinor/radix-common/utils"
 	"github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/deployment"
@@ -9,7 +11,6 @@ import (
 	"github.com/equinor/radix-operator/pkg/apis/utils"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"testing"
 )
 
 func Test_createJob(t *testing.T) {
@@ -56,10 +57,11 @@ func Test_createJobWithEnvVars(t *testing.T) {
 
 		assert.NoError(t, err)
 		envVars := job.Spec.Template.Spec.Containers[0].Env
-		assert.Len(t, envVars, 2)
+		assert.Len(t, envVars, 3)
 		envVarsMap := getEnvVarsMap(envVars)
 		assert.Equal(t, "val1", envVarsMap["VAR1"].Value)
 		assert.Equal(t, "val2", envVarsMap["VAR2"].Value)
+		assert.Equal(t, job.Name, envVarsMap[radixJobNameLabel].Value)
 	})
 
 	t.Run("Create Job with updated and deleted env-vars", func(t *testing.T) {
@@ -79,12 +81,12 @@ func Test_createJobWithEnvVars(t *testing.T) {
 			withEnvVarsMetadataConfigMapData(map[string]string{"VAR2": "orig-val2"})
 		rd := params.applyRd(kubeUtil)
 
-		job, err := h.createJob(params.jobName, &rd.Spec.Jobs[0], rd, &corev1.Secret{}, &models.JobScheduleDescription{Payload: "{}"})
+		job, _ := h.createJob(params.jobName, &rd.Spec.Jobs[0], rd, &corev1.Secret{}, &models.JobScheduleDescription{Payload: "{}"})
 
 		envVarsConfigMap, _, envVarsMetadataMap, err := kubeUtil.GetEnvVarsConfigMapAndMetadataMap(params.namespace, params.jobName)
 		assert.NoError(t, err)
 		envVars := job.Spec.Template.Spec.Containers[0].Env
-		assert.Len(t, envVars, 2)
+		assert.Len(t, envVars, 3)
 		envVarsMap := getEnvVarsMap(envVars)
 		assert.NotNil(t, envVarsMap["VAR1"].ValueFrom)
 		assert.Equal(t, "val1", envVarsConfigMap.Data["VAR1"])
@@ -93,6 +95,7 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		assert.NotEmpty(t, envVarsMetadataMap)
 		assert.NotEmpty(t, envVarsMetadataMap["VAR2"])
 		assert.Equal(t, "orig-val2", envVarsMetadataMap["VAR2"].RadixConfigValue)
+		assert.Equal(t, job.Name, envVarsMap[radixJobNameLabel].Value)
 	})
 
 	t.Run("Create Job adds itself as owner-ref to env-vars config-maps", func(t *testing.T) {

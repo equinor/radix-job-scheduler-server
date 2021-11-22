@@ -19,6 +19,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+const (
+	radixJobNameLabel = "RADIX_JOB_NAME"
+)
+
 func (jh *jobHandler) createJob(jobName string, jobComponent *v1.RadixDeployJobComponent, rd *v1.RadixDeployment, payloadSecret *corev1.Secret, jobScheduleDescription *models.JobScheduleDescription) (*batchv1.Job, error) {
 	var jobComponentConfig *models.RadixJobComponentConfig
 	if jobScheduleDescription != nil {
@@ -213,11 +217,16 @@ func buildEnvironmentVariablesWithEnvVarsConfigMaps(kubeUtils *kube.Kube, rd *v1
 	jobEnvVarsMetadataConfigMap := kube.BuildRadixConfigEnvVarsMetadataConfigMap(rd.GetName(), jobName) //build env-vars metadata config-name with name and 'env-vars-metadata-JOB_NAME'
 
 	environmentVariables, err := deployment.GetEnvironmentVariables(kubeUtils, rd.Spec.AppName, rd, radixJobComponent)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	environmentVariables = append(environmentVariables, corev1.EnvVar{Name: radixJobNameLabel, Value: jobName})
 
 	err = kube.SetEnvVarsMetadataMapToConfigMap(jobEnvVarsMetadataConfigMap, envVarsMetadataMap) //use env-vars metadata config-map, individual for each job
 	if err != nil {
 		return nil, nil, nil, err
 	}
+
 	return environmentVariables, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, nil
 }
 
