@@ -279,14 +279,15 @@ func TestCreateJob(t *testing.T) {
 		assert.NotNil(t, jobStatus)
 		// Test environment variables
 		job, _ := kubeClient.BatchV1().Jobs(envNamespace).Get(context.TODO(), jobStatus.Name, metav1.GetOptions{})
+		envVarsMap := getEnvVarsMap(job.Spec.Template.Spec.Containers[0].Env)
 		assert.Len(t, job.Spec.Template.Spec.Containers[0].Env, 3)
 		envVarConfigMap := envVarConfigMapsMap[appJobComponent]
 		env1 := getEnvByNameForTest(envVarConfigMap, job.Spec.Template.Spec.Containers[0].Env, "ENV1")
 		assert.Equal(t, "value1", env1.Value)
 		env2 := getEnvByNameForTest(envVarConfigMap, job.Spec.Template.Spec.Containers[0].Env, "ENV2")
 		assert.Equal(t, "value2", env2.Value)
-		env3 := getEnvByNameForTest(envVarConfigMap, job.Spec.Template.Spec.Containers[0].Env, radixJobNameLabel)
-		assert.Equal(t, job.Name, env3.Value)
+		env3 := envVarsMap[radixJobNameEnvironmentVariable]
+		assert.NotEmpty(t, env3)
 	})
 
 	t.Run("RD job with payload path - secret exists and mounted", func(t *testing.T) {
@@ -707,6 +708,7 @@ func TestCreateJob(t *testing.T) {
 		assert.Nil(t, err)
 		job, _ := kubeClient.BatchV1().Jobs(envNamespace).Get(context.TODO(), jobStatus.Name, metav1.GetOptions{})
 		envVarConfigMap := envVarConfigMapsMap[appJobComponent]
+		envVarsMap := getEnvVarsMap(job.Spec.Template.Spec.Containers[0].Env)
 		assert.Len(t, job.Spec.Template.Spec.Containers[0].Env, 3)
 		env1 := getEnvByNameForTest(envVarConfigMap, job.Spec.Template.Spec.Containers[0].Env, "SECRET1")
 		assert.Equal(t, "SECRET1", env1.ValueFrom.SecretKeyRef.Key)
@@ -715,8 +717,8 @@ func TestCreateJob(t *testing.T) {
 		assert.NotNil(t, env2)
 		assert.Equal(t, "SECRET2", env2.ValueFrom.SecretKeyRef.Key)
 		assert.Equal(t, utils.GetComponentSecretName(appJobComponent), env2.ValueFrom.SecretKeyRef.LocalObjectReference.Name)
-		env3 := getEnvByNameForTest(envVarConfigMap, job.Spec.Template.Spec.Containers[0].Env, radixJobNameLabel)
-		assert.Equal(t, job.Name, env3.Value)
+		env3 := envVarsMap[radixJobNameEnvironmentVariable]
+		assert.NotEmpty(t, env3)
 	})
 
 	t.Run("RD job with volume mount", func(t *testing.T) {

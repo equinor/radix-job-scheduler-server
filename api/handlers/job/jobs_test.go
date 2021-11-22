@@ -61,7 +61,7 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		envVarsMap := getEnvVarsMap(envVars)
 		assert.Equal(t, "val1", envVarsMap["VAR1"].Value)
 		assert.Equal(t, "val2", envVarsMap["VAR2"].Value)
-		assert.Equal(t, job.Name, envVarsMap[radixJobNameLabel].Value)
+		assert.NotEmpty(t, envVarsMap[radixJobNameEnvironmentVariable])
 	})
 
 	t.Run("Create Job with updated and deleted env-vars", func(t *testing.T) {
@@ -95,7 +95,7 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		assert.NotEmpty(t, envVarsMetadataMap)
 		assert.NotEmpty(t, envVarsMetadataMap["VAR2"])
 		assert.Equal(t, "orig-val2", envVarsMetadataMap["VAR2"].RadixConfigValue)
-		assert.Equal(t, job.Name, envVarsMap[radixJobNameLabel].Value)
+		assert.NotEmpty(t, envVarsMap[radixJobNameEnvironmentVariable])
 	})
 
 	t.Run("Create Job adds itself as owner-ref to env-vars config-maps", func(t *testing.T) {

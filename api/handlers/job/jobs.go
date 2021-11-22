@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	radixJobNameLabel = "RADIX_JOB_NAME"
+	radixJobNameEnvironmentVariable = "RADIX_JOB_NAME"
 )
 
 func (jh *jobHandler) createJob(jobName string, jobComponent *v1.RadixDeployJobComponent, rd *v1.RadixDeployment, payloadSecret *corev1.Secret, jobScheduleDescription *models.JobScheduleDescription) (*batchv1.Job, error) {
@@ -220,7 +220,9 @@ func buildEnvironmentVariablesWithEnvVarsConfigMaps(kubeUtils *kube.Kube, rd *v1
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	environmentVariables = append(environmentVariables, corev1.EnvVar{Name: radixJobNameLabel, Value: jobName})
+	environmentVariables = append(environmentVariables, corev1.EnvVar{Name: radixJobNameEnvironmentVariable, ValueFrom: &corev1.EnvVarSource{
+		FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.labels['job-name']"},
+	}})
 
 	err = kube.SetEnvVarsMetadataMapToConfigMap(jobEnvVarsMetadataConfigMap, envVarsMetadataMap) //use env-vars metadata config-map, individual for each job
 	if err != nil {
