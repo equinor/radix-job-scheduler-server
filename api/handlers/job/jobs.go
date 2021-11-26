@@ -261,7 +261,7 @@ func getVolumeMounts(radixJobComponent *v1.RadixDeployJobComponent, payloadSecre
 }
 
 func (jh *jobHandler) getVolumes(namespace, environment string, radixJobComponent *v1.RadixDeployJobComponent, payloadSecret *corev1.Secret) ([]corev1.Volume, error) {
-	volumes, err := deployment.GetVolumes(jh.kubeClient, namespace, environment, radixJobComponent.Name, radixJobComponent.VolumeMounts)
+	volumes, err := deployment.GetVolumes(jh.kubeClient, jh.kube, namespace, environment, radixJobComponent)
 	if err != nil {
 		return nil, err
 	}
