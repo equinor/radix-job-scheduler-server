@@ -19,6 +19,6 @@ require (
 )
 
 replace (
-	//github.com/equinor/radix-operator => /home/user1/go/src/github.com/equinor/radix-operator
+	github.com/equinor/radix-operator => /home/user1/go/src/github.com/equinor/radix-operator
 	k8s.io/client-go => k8s.io/client-go v0.22.4
 )

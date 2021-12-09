@@ -130,7 +130,7 @@ func (jh *jobHandler) getJobPods(jobName string) ([]corev1.Pod, error) {
 
 func (jh *jobHandler) buildJobSpec(jobName string, rd *v1.RadixDeployment, radixJobComponent *v1.RadixDeployJobComponent, payloadSecret *corev1.Secret, kubeutil *kube.Kube, jobComponentConfig *models.RadixJobComponentConfig) (*batchv1.Job, *corev1.ConfigMap, *corev1.ConfigMap, error) {
 	podSecurityContext := jh.securityContextBuilder.BuildPodSecurityContext(radixJobComponent)
-	volumes, err := jh.getVolumes(rd.ObjectMeta.Namespace, rd.Spec.Environment, radixJobComponent, payloadSecret)
+	volumes, err := jh.getVolumes(rd.ObjectMeta.Namespace, rd.Spec.Environment, radixJobComponent, rd.Name, payloadSecret)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -260,8 +260,8 @@ func getVolumeMounts(radixJobComponent *v1.RadixDeployJobComponent, payloadSecre
 	return volumeMounts, nil
 }
 
-func (jh *jobHandler) getVolumes(namespace, environment string, radixJobComponent *v1.RadixDeployJobComponent, payloadSecret *corev1.Secret) ([]corev1.Volume, error) {
-	volumes, err := deployment.GetVolumes(jh.kubeClient, jh.kube, namespace, environment, radixJobComponent)
+func (jh *jobHandler) getVolumes(namespace, environment string, radixJobComponent *v1.RadixDeployJobComponent, radixDeploymentName string, payloadSecret *corev1.Secret) ([]corev1.Volume, error) {
+	volumes, err := deployment.GetVolumes(jh.kubeClient, jh.kube, namespace, environment, radixJobComponent, radixDeploymentName)
 	if err != nil {
 		return nil, err
 	}
