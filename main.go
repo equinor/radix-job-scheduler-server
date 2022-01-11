@@ -42,8 +42,10 @@ func main() {
 }
 
 func getControllers(env *schedulerModels.Env) []models.Controller {
-	kubeClient, radixClient, _ := utils.GetKubernetesClient()
+	kubeClient, radixClient, _, secretProviderClient := utils.GetKubernetesClient()
 	kubeUtil, _ := kube.New(kubeClient, radixClient)
+	kubeUtil.WithSecretsProvider(secretProviderClient)
+
 	return []models.Controller{
 		cj.New(ch.New(env, kubeUtil, kubeClient, radixClient)),
 	}

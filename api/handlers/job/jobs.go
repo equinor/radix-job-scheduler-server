@@ -184,7 +184,7 @@ func getContainersWithEnvVarsConfigMaps(kubeUtils *kube.Kube, rd *v1.RadixDeploy
 	}
 	ports := getContainerPorts(radixJobComponent)
 	containerSecurityContext := securityContextBuilder.BuildContainerSecurityContext(radixJobComponent)
-	volumeMounts, err := getVolumeMounts(radixJobComponent, payloadSecret)
+	volumeMounts, err := getVolumeMounts(radixJobComponent, rd.GetName(), payloadSecret)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -244,8 +244,8 @@ func getJobOwnerReferences(job *batchv1.Job) []metav1.OwnerReference {
 	}
 }
 
-func getVolumeMounts(radixJobComponent *v1.RadixDeployJobComponent, payloadSecret *corev1.Secret) ([]corev1.VolumeMount, error) {
-	volumeMounts, err := deployment.GetRadixDeployComponentVolumeMounts(radixJobComponent)
+func getVolumeMounts(radixJobComponent *v1.RadixDeployJobComponent, radixDeploymentName string, payloadSecret *corev1.Secret) ([]corev1.VolumeMount, error) {
+	volumeMounts, err := deployment.GetRadixDeployComponentVolumeMounts(radixJobComponent, radixDeploymentName)
 	if err != nil {
 		return nil, err
 	}
