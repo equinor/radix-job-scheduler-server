@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+
 	cj "github.com/equinor/radix-job-scheduler-server/api/controllers/job"
 	ch "github.com/equinor/radix-job-scheduler-server/api/handlers/job"
 	"github.com/equinor/radix-job-scheduler-server/models"
@@ -12,8 +15,6 @@ import (
 	"github.com/equinor/radix-operator/pkg/apis/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
-	"net/http"
-	"os"
 )
 
 func main() {
@@ -43,8 +44,7 @@ func main() {
 
 func getControllers(env *schedulerModels.Env) []models.Controller {
 	kubeClient, radixClient, _, secretProviderClient := utils.GetKubernetesClient()
-	kubeUtil, _ := kube.New(kubeClient, radixClient)
-	kubeUtil.WithSecretsProvider(secretProviderClient)
+	kubeUtil, _ := kube.New(kubeClient, radixClient, secretProviderClient)
 
 	return []models.Controller{
 		cj.New(ch.New(env, kubeUtil, kubeClient, radixClient)),
