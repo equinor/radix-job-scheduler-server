@@ -4,8 +4,8 @@ go 1.16
 
 require (
 	github.com/equinor/radix-common v1.1.6
-	github.com/equinor/radix-job-scheduler v1.3.0
-	github.com/equinor/radix-operator v1.16.4
+	github.com/equinor/radix-job-scheduler v1.4.0
+	github.com/equinor/radix-operator v1.16.13
 	github.com/golang/mock v1.5.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rakyll/statik v0.1.6
