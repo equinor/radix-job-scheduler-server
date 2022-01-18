@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	kubefake "k8s.io/client-go/kubernetes/fake"
+	secretproviderfake "sigs.k8s.io/secrets-store-csi-driver/pkg/client/clientset/versioned/fake"
 )
 
 func setupTest(appName, appEnvironment, appComponent, appDeployment string, historyLimit int) (radixclient.Interface, kubernetes.Interface, *kube.Kube) {
@@ -38,7 +39,7 @@ func setupTest(appName, appEnvironment, appComponent, appDeployment string, hist
 	os.Setenv(defaults.OperatorEnvLimitDefaultMemoryEnvironmentVariable, "500M")
 	kubeclient := kubefake.NewSimpleClientset()
 	radixclient := radixfake.NewSimpleClientset()
-	kubeUtil, _ := kube.New(kubeclient, radixclient)
+	kubeUtil, _ := kube.New(kubeclient, radixclient, secretproviderfake.NewSimpleClientset())
 	return radixclient, kubeclient, kubeUtil
 }
 
