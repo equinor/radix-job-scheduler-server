@@ -139,10 +139,17 @@ func (jh *jobHandler) buildJobSpec(jobName string, rd *v1.RadixDeployment, radix
 		return nil, nil, nil, err
 	}
 	var affinity *corev1.Affinity
+	var timeLimitSeconds *int64
 	if jobComponentConfig != nil && jobComponentConfig.Node != nil {
 		affinity = operatorUtils.GetPodSpecAffinity(jobComponentConfig.Node)
 	} else {
 		affinity = operatorUtils.GetPodSpecAffinity(&radixJobComponent.Node)
+	}
+
+	if jobComponentConfig != nil && jobComponentConfig.TimeLimitSeconds != nil {
+		timeLimitSeconds = jobComponentConfig.TimeLimitSeconds
+	} else {
+		timeLimitSeconds = radixJobComponent.GetTimeLimitSeconds()
 	}
 
 	return &batchv1.Job{
@@ -165,12 +172,13 @@ func (jh *jobHandler) buildJobSpec(jobName string, rd *v1.RadixDeployment, radix
 					Namespace: rd.ObjectMeta.Namespace,
 				},
 				Spec: corev1.PodSpec{
-					Containers:       containers,
-					Volumes:          volumes,
-					SecurityContext:  podSecurityContext,
-					RestartPolicy:    corev1.RestartPolicyNever,
-					ImagePullSecrets: rd.Spec.ImagePullSecrets,
-					Affinity:         affinity,
+					Containers:            containers,
+					Volumes:               volumes,
+					SecurityContext:       podSecurityContext,
+					RestartPolicy:         corev1.RestartPolicyNever,
+					ImagePullSecrets:      rd.Spec.ImagePullSecrets,
+					Affinity:              affinity,
+					ActiveDeadlineSeconds: timeLimitSeconds,
 				},
 			},
 		},
