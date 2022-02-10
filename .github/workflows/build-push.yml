@@ -1,5 +1,4 @@
-name: Docker Image CI
-
+name: radix-job-scheduler-server-build
 on:
   push:
     branches: [main, release]
