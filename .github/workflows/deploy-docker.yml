@@ -3,54 +3,47 @@ name: Docker Image CI
 on:
   push:
     branches: [main, release]
-
+permissions:
+  id-token: write
 jobs:
-  build-deploy-image-main:
-    if: github.ref == 'refs/heads/main'
+  build-deploy-image-dev:
+    name: Build-push to dev
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: radix-job-scheduler-server
     steps:
-      - uses: actions/checkout@v2
-      - name: Build Docker image
+      - uses: actions/checkout@v1
+      - name: 'Build docker image'
         run: |
           docker build -t radixdev.azurecr.io/$IMAGE_NAME:main-latest .
-      - name: Azure login
+      - name: 'Login to dev'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_DEV }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_DEV }}
+      - name: 'Push to dev'
         run: |
-          az login --service-principal --username ${{secrets.DEV_AZURE_CREDENTIALS_CLIENT_ID}}  --password "${{secrets.DEV_AZURE_CREDENTIALS_CLIENT_SECRET}}" --tenant ${{secrets.AZURE_TENANT_ID}}
-          az account set -s "${{secrets.DEV_AZURE_SUBSCRIPTION_ID}}"
-      - name: Push to radixdev
-        run: |
-          az acr login -n radixdev -g common
+          az acr login --name radixdev
           docker push radixdev.azurecr.io/$IMAGE_NAME:main-latest
-          az logout
-  build-deploy-image-release:
+  build-deploy-image-prod:
     if: github.ref == 'refs/heads/release'
+    name: Build-push to prod
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: radix-job-scheduler-server
     steps:
-      - uses: actions/checkout@v2
-      - name: Build Docker image dev
-        run: |
-          docker build -t radixdev.azurecr.io/$IMAGE_NAME:release-latest .
-      - name: Azure login dev
-        run: |
-          az login --service-principal --username ${{secrets.DEV_AZURE_CREDENTIALS_CLIENT_ID}}  --password "${{secrets.DEV_AZURE_CREDENTIALS_CLIENT_SECRET}}" --tenant ${{secrets.AZURE_TENANT_ID}}
-          az account set -s "${{secrets.DEV_AZURE_SUBSCRIPTION_ID}}"
-      - name: Push to radixdev
-        run: |
-          az acr login -n radixdev -g common
-          docker push radixdev.azurecr.io/$IMAGE_NAME:release-latest
-          az logout
-      - name: Build Docker image prod
+      - uses: actions/checkout@v1
+      - name: 'Build docker image'
         run: |
           docker build -t radixprod.azurecr.io/$IMAGE_NAME:release-latest .
-      - name: Azure login prod
+      - name: 'Login to prod'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_PROD }}
+      - name: 'Push to prod'
         run: |
-          az login --service-principal --username ${{secrets.PROD_AZURE_CREDENTIALS_CLIENT_ID}}  --password "${{secrets.PROD_AZURE_CREDENTIALS_CLIENT_SECRET}}" --tenant ${{secrets.AZURE_TENANT_ID}}
-          az account set -s "${{secrets.PROD_AZURE_SUBSCRIPTION_ID}}"
-      - name: Push to radixprod
-        run: |
-          az acr login -n radixprod -g common
+          az acr login --name radixprod
           docker push radixprod.azurecr.io/$IMAGE_NAME:release-latest
