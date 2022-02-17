@@ -22,8 +22,7 @@ import (
 )
 
 const (
-	JOB_PAYLOAD_PROPERTY_NAME          = "payload"
-	OBSOLETE_RADIX_APP_NAME_LABEL_NAME = "radix-app-name"
+	jobPayloadPropertyName = "payload"
 )
 
 type Handler interface {

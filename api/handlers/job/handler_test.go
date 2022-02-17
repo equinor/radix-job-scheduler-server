@@ -323,16 +323,16 @@ func TestCreateJob(t *testing.T) {
 		assert.Equal(t, appJobComponent, secret.Labels[kube.RadixComponentLabel])
 		assert.Equal(t, kube.RadixJobTypeJobSchedule, secret.Labels[kube.RadixJobTypeLabel])
 		assert.Equal(t, jobStatus.Name, secret.Labels[kube.RadixJobNameLabel])
-		payloadBytes := secret.Data[JOB_PAYLOAD_PROPERTY_NAME]
+		payloadBytes := secret.Data[jobPayloadPropertyName]
 		assert.Equal(t, payloadString, string(payloadBytes))
 		// Test secret mounted
 		job, _ := kubeClient.BatchV1().Jobs(envNamespace).Get(context.TODO(), jobStatus.Name, metav1.GetOptions{})
 		assert.NotNil(t, job)
 		assert.Len(t, job.Spec.Template.Spec.Volumes, 1)
-		assert.Equal(t, JOB_PAYLOAD_PROPERTY_NAME, job.Spec.Template.Spec.Volumes[0].Name)
+		assert.Equal(t, jobPayloadPropertyName, job.Spec.Template.Spec.Volumes[0].Name)
 		assert.Equal(t, secretName, job.Spec.Template.Spec.Volumes[0].Secret.SecretName)
 		assert.Len(t, job.Spec.Template.Spec.Containers[0].VolumeMounts, 1)
-		assert.Equal(t, JOB_PAYLOAD_PROPERTY_NAME, job.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+		assert.Equal(t, jobPayloadPropertyName, job.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 		assert.Equal(t, payloadPath, job.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
 	})
 

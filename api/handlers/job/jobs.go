@@ -259,7 +259,7 @@ func getVolumeMounts(radixJobComponent *v1.RadixDeployJobComponent, radixDeploym
 	}
 	if payloadSecret != nil {
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
-			Name:      JOB_PAYLOAD_PROPERTY_NAME,
+			Name:      jobPayloadPropertyName,
 			ReadOnly:  true,
 			MountPath: radixJobComponent.Payload.Path,
 		})
@@ -291,7 +291,7 @@ func getResourceRequirements(radixJobComponent *radixv1.RadixDeployJobComponent,
 
 func getPayloadVolume(secretName string) *corev1.Volume {
 	volume := &corev1.Volume{
-		Name: JOB_PAYLOAD_PROPERTY_NAME,
+		Name: jobPayloadPropertyName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
 				SecretName: secretName,

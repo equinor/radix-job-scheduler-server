@@ -55,12 +55,12 @@ func buildPayloadSecretSpec(secretName, payload, jobName, appName, componentName
 			},
 		},
 		Data: map[string][]byte{
-			JOB_PAYLOAD_PROPERTY_NAME: []byte(payload),
+			jobPayloadPropertyName: []byte(payload),
 		},
 	}
 	return &secret
 }
 
 func getPayloadSecretName(jobName string) string {
-	return fmt.Sprintf("%s-%s", jobName, JOB_PAYLOAD_PROPERTY_NAME)
+	return fmt.Sprintf("%s-%s", jobName, jobPayloadPropertyName)
 }
