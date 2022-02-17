@@ -226,6 +226,8 @@ func TestCreateJob(t *testing.T) {
 		assert.Equal(t, numbers.Int32Ptr(0), job.Spec.BackoffLimit)
 		assert.Equal(t, corev1.RestartPolicyNever, job.Spec.Template.Spec.RestartPolicy)
 		assert.Equal(t, corev1.PullAlways, job.Spec.Template.Spec.Containers[0].ImagePullPolicy)
+		assert.Nil(t, job.Spec.Template.Spec.Affinity)
+		assert.Len(t, job.Spec.Template.Spec.Tolerations, 0)
 	})
 
 	t.Run("RD job image", func(t *testing.T) {
@@ -792,6 +794,11 @@ func TestCreateJob(t *testing.T) {
 		gpuCount := getNodeSelectorRequirementByKeyForTest(job.Spec.Template.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions, kube.RadixGpuCountLabel)
 		assert.Equal(t, corev1.NodeSelectorOpGt, gpuCount.Operator)
 		assert.Equal(t, gpuCount.Values, []string{"1"})
+		tolerations := job.Spec.Template.Spec.Tolerations
+		assert.Len(t, tolerations, 1)
+		assert.Equal(t, kube.NodeTaintGpuCountKey, tolerations[0].Key)
+		assert.Equal(t, corev1.TolerationOpExists, tolerations[0].Operator)
+		assert.Equal(t, corev1.TaintEffectNoSchedule, tolerations[0].Effect)
 	})
 
 	t.Run("RD job with GPU node - GPU node specified by request body", func(t *testing.T) {
@@ -843,6 +850,11 @@ func TestCreateJob(t *testing.T) {
 		assert.ElementsMatch(t, gpu.Values, []string{"amd1", "amd2", "amd3"})
 		assert.Equal(t, corev1.NodeSelectorOpGt, gpuCount.Operator)
 		assert.Equal(t, gpuCount.Values, []string{"5"})
+		tolerations := job.Spec.Template.Spec.Tolerations
+		assert.Len(t, tolerations, 1)
+		assert.Equal(t, kube.NodeTaintGpuCountKey, tolerations[0].Key)
+		assert.Equal(t, corev1.TolerationOpExists, tolerations[0].Operator)
+		assert.Equal(t, corev1.TaintEffectNoSchedule, tolerations[0].Effect)
 	})
 
 	t.Run("securityContextBuilder is called", func(t *testing.T) {
