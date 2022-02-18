@@ -112,7 +112,7 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		params := getTestParams().withRadixConfigEnvVarsMap(map[string]string{"VAR1": "val1", "VAR2": "val2"})
 		rd := params.applyRd(kubeUtil)
 
-		job, err := h.createJob(params.jobName, &rd.Spec.Jobs[0], rd, &corev1.Secret{}, &models.JobScheduleDescription{Payload: "{}"})
+		job, _ := h.createJob(params.jobName, &rd.Spec.Jobs[0], rd, &corev1.Secret{}, &models.JobScheduleDescription{Payload: "{}"})
 
 		envVarsConfigMap, envVarsMetadataConfigMap, _, err := kubeUtil.GetEnvVarsConfigMapAndMetadataMap(params.namespace, params.jobName)
 		assert.NoError(t, err)
