@@ -3,12 +3,13 @@ package job
 import (
 	"context"
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
+	jobDefaults "github.com/equinor/radix-job-scheduler/defaults"
 	"sort"
 	"strings"
 	"time"
 
 	jobErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
+	jobKube "github.com/equinor/radix-job-scheduler/kube"
 	"github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/deployment"
 	"github.com/equinor/radix-operator/pkg/apis/kube"
@@ -17,6 +18,7 @@ import (
 	radixclient "github.com/equinor/radix-operator/pkg/client/clientset/versioned"
 	log "github.com/sirupsen/logrus"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -26,33 +28,37 @@ const (
 )
 
 type Handler interface {
+	//GetJobs Get status of all jobs
 	GetJobs() ([]models.JobStatus, error)
+	//GetJob Get status of a job
 	GetJob(name string) (*models.JobStatus, error)
+	//CreateJob Create a job with parameters
 	CreateJob(jobScheduleDescription *models.JobScheduleDescription) (*models.JobStatus, error)
+	//MaintainHistoryLimit Delete outdated jobs
 	MaintainHistoryLimit() error
+	//DeleteJob Delete a job
 	DeleteJob(jobName string) error
 }
 
 type jobHandler struct {
-	kube                   *kube.Kube
-	env                    *models.Env
-	kubeClient             kubernetes.Interface
-	radixClient            radixclient.Interface
-	securityContextBuilder deployment.SecurityContextBuilder
+	model *jobKube.HandlerModel
 }
 
 func New(env *models.Env, kube *kube.Kube, kubeClient kubernetes.Interface, radixClient radixclient.Interface) Handler {
 	return &jobHandler{
-		kube:                   kube,
-		kubeClient:             kubeClient,
-		radixClient:            radixClient,
-		env:                    env,
-		securityContextBuilder: deployment.NewSecurityContextBuilder(true),
+		model: &jobKube.HandlerModel{
+			Kube:                   kube,
+			KubeClient:             kubeClient,
+			RadixClient:            radixClient,
+			Env:                    env,
+			SecurityContextBuilder: deployment.NewSecurityContextBuilder(true),
+		},
 	}
 }
 
+//GetJobs Get status of all jobs
 func (jh *jobHandler) GetJobs() ([]models.JobStatus, error) {
-	log.Debugf("Get Jobs for namespace: %s", jh.env.RadixDeploymentNamespace)
+	log.Debugf("Get Jobs for namespace: %s", jh.model.Env.RadixDeploymentNamespace)
 
 	kubeJobs, err := jh.getAllJobs()
 	if err != nil {
@@ -66,17 +72,17 @@ func (jh *jobHandler) GetJobs() ([]models.JobStatus, error) {
 	podsMap := getJobPodsMap(pods)
 	jobs := make([]models.JobStatus, len(kubeJobs))
 	for idx, k8sJob := range kubeJobs {
-		jobs[idx] = *models.GetJobStatusFromJob(jh.kubeClient, k8sJob, podsMap[k8sJob.Name])
+		jobs[idx] = *models.GetJobStatusFromJob(jh.model.KubeClient, k8sJob, podsMap[k8sJob.Name])
 	}
 
-	log.Debugf("Found %v jobs for namespace %s", len(jobs), jh.env.RadixDeploymentNamespace)
+	log.Debugf("Found %v jobs for namespace %s", len(jobs), jh.model.Env.RadixDeploymentNamespace)
 	return jobs, nil
 }
 
 func getJobPodsMap(pods []corev1.Pod) map[string][]corev1.Pod {
 	podsMap := make(map[string][]corev1.Pod)
 	for _, pod := range pods {
-		jobName := pod.Labels[k8sJobNameLabel]
+		jobName := pod.Labels[jobDefaults.K8sJobNameLabel]
 		if len(jobName) > 0 {
 			podsMap[jobName] = append(podsMap[jobName], pod)
 		}
@@ -84,42 +90,44 @@ func getJobPodsMap(pods []corev1.Pod) map[string][]corev1.Pod {
 	return podsMap
 }
 
+//GetJob Get status of a job
 func (jh *jobHandler) GetJob(jobName string) (*models.JobStatus, error) {
-	log.Debugf("get jobs for namespace: %s", jh.env.RadixDeploymentNamespace)
+	log.Debugf("get jobs for namespace: %s", jh.model.Env.RadixDeploymentNamespace)
 	job, err := jh.getJobByName(jobName)
 	if err != nil {
 		return nil, err
 	}
-	log.Debugf("found Job %s for namespace: %s", jobName, jh.env.RadixDeploymentNamespace)
+	log.Debugf("found Job %s for namespace: %s", jobName, jh.model.Env.RadixDeploymentNamespace)
 	pods, err := jh.getJobPods(job.Name)
 	if err != nil {
 		return nil, err
 	}
-	jobStatus := models.GetJobStatusFromJob(jh.kubeClient, job, pods)
+	jobStatus := models.GetJobStatusFromJob(jh.model.KubeClient, job, pods)
 	return jobStatus, nil
 }
 
+//CreateJob Create a job with parameters
 func (jh *jobHandler) CreateJob(jobScheduleDescription *models.JobScheduleDescription) (*models.JobStatus, error) {
-	log.Debugf("create job for namespace: %s", jh.env.RadixDeploymentNamespace)
+	log.Debugf("create job for namespace: %s", jh.model.Env.RadixDeploymentNamespace)
 
-	radixDeployment, err := jh.radixClient.RadixV1().RadixDeployments(jh.env.RadixDeploymentNamespace).Get(context.TODO(), jh.env.RadixDeploymentName, metav1.GetOptions{})
+	radixDeployment, err := jh.model.RadixClient.RadixV1().RadixDeployments(jh.model.Env.RadixDeploymentNamespace).Get(context.TODO(), jh.model.Env.RadixDeploymentName, metav1.GetOptions{})
 	if err != nil {
-		return nil, jobErrors.NewNotFound("radix deployment", jh.env.RadixDeploymentName)
+		return nil, jobErrors.NewNotFound("radix deployment", jh.model.Env.RadixDeploymentName)
 	}
 
-	jobComponent := radixDeployment.GetJobComponentByName(jh.env.RadixComponentName)
+	jobComponent := radixDeployment.GetJobComponentByName(jh.model.Env.RadixComponentName)
 	if jobComponent == nil {
-		return nil, jobErrors.NewNotFound("job component", jh.env.RadixComponentName)
+		return nil, jobErrors.NewNotFound("job component", jh.model.Env.RadixComponentName)
 	}
 
 	jobName := generateJobName(jobComponent)
 
-	payloadSecret, err := jh.createPayloadSecret(jobName, jobComponent, radixDeployment, jobScheduleDescription)
+	payloadSecret, err := jh.model.CreatePayloadSecret(jobName, jobComponent, radixDeployment, jobScheduleDescription)
 	if err != nil {
 		return nil, jobErrors.NewFromError(err)
 	}
 
-	if err = jh.createService(jobName, jobComponent, radixDeployment); err != nil {
+	if err = jh.model.CreateService(jobName, jobComponent, radixDeployment); err != nil {
 		return nil, jobErrors.NewFromError(err)
 	}
 
@@ -128,15 +136,17 @@ func (jh *jobHandler) CreateJob(jobScheduleDescription *models.JobScheduleDescri
 		return nil, jobErrors.NewFromError(err)
 	}
 
-	log.Debug(fmt.Sprintf("created job %s for component %s, environment %s, in namespace: %s", job.Name, jh.env.RadixComponentName, radixDeployment.Spec.Environment, jh.env.RadixDeploymentNamespace))
-	return models.GetJobStatusFromJob(jh.kubeClient, job, nil), nil
+	log.Debug(fmt.Sprintf("created job %s for component %s, environment %s, in namespace: %s", job.Name, jh.model.Env.RadixComponentName, radixDeployment.Spec.Environment, jh.model.Env.RadixDeploymentNamespace))
+	return models.GetJobStatusFromJob(jh.model.KubeClient, job, nil), nil
 }
 
+//DeleteJob Delete a job
 func (jh *jobHandler) DeleteJob(jobName string) error {
-	log.Debugf("delete job %s for namespace: %s", jobName, jh.env.RadixDeploymentNamespace)
+	log.Debugf("delete job %s for namespace: %s", jobName, jh.model.Env.RadixDeploymentNamespace)
 	return jh.garbageCollectJob(jobName)
 }
 
+//MaintainHistoryLimit Delete outdated jobs
 func (jh *jobHandler) MaintainHistoryLimit() error {
 	jobList, err := jh.getAllJobs()
 	if err != nil {
@@ -145,13 +155,13 @@ func (jh *jobHandler) MaintainHistoryLimit() error {
 
 	log.Debug("maintain history limit for succeeded jobs")
 	succeededJobs := jobList.Where(func(j *batchv1.Job) bool { return j.Status.Succeeded > 0 })
-	if err = jh.maintainHistoryLimitForJobs(succeededJobs, jh.env.RadixJobSchedulersPerEnvironmentHistoryLimit); err != nil {
+	if err = jh.maintainHistoryLimitForJobs(succeededJobs, jh.model.Env.RadixJobSchedulersPerEnvironmentHistoryLimit); err != nil {
 		return err
 	}
 
 	log.Debug("maintain history limit for failed jobs")
 	failedJobs := jobList.Where(func(j *batchv1.Job) bool { return j.Status.Failed > 0 })
-	if err = jh.maintainHistoryLimitForJobs(failedJobs, jh.env.RadixJobSchedulersPerEnvironmentHistoryLimit); err != nil {
+	if err = jh.maintainHistoryLimitForJobs(failedJobs, jh.model.Env.RadixJobSchedulersPerEnvironmentHistoryLimit); err != nil {
 		return err
 	}
 
@@ -183,24 +193,24 @@ func (jh *jobHandler) garbageCollectJob(jobName string) (err error) {
 		return
 	}
 
-	secrets, err := jh.getSecretsForJob(jobName)
+	secrets, err := jh.model.GetSecretsForJob(jobName)
 	if err != nil {
 		return
 	}
 
 	for _, secret := range secrets.Items {
-		if err = jh.deleteSecret(&secret); err != nil {
+		if err = jh.model.DeleteSecret(&secret); err != nil {
 			return
 		}
 	}
 
-	services, err := jh.getServiceForJob(jobName)
+	services, err := jh.model.GetServiceForJob(jobName)
 	if err != nil {
 		return
 	}
 
 	for _, service := range services.Items {
-		if err = jh.deleteService(&service); err != nil {
+		if err = jh.model.DeleteService(&service); err != nil {
 			return
 		}
 	}
@@ -240,8 +250,4 @@ func generateJobName(jobComponent *radixv1.RadixDeployJobComponent) string {
 	timestamp := time.Now().Format("20060102150405")
 	jobTag := strings.ToLower(utils.RandString(8))
 	return fmt.Sprintf("%s-%s-%s", jobComponent.Name, timestamp, jobTag)
-}
-
-func isPayloadDefinedForJobComponent(radixJobComponent *radixv1.RadixDeployJobComponent) bool {
-	return radixJobComponent.Payload != nil && strings.TrimSpace(radixJobComponent.Payload.Path) != ""
 }

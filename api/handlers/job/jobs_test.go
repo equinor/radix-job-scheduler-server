@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	radixUtils "github.com/equinor/radix-common/utils"
+	"github.com/equinor/radix-job-scheduler-server/api/handlers"
 	"github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/deployment"
 	"github.com/equinor/radix-operator/pkg/apis/kube"
@@ -18,11 +19,13 @@ func Test_createJob(t *testing.T) {
 	env := models.NewEnv()
 
 	h := &jobHandler{
-		kube:                   kubeUtil,
-		kubeClient:             kubeClient,
-		radixClient:            radixClient,
-		env:                    env,
-		securityContextBuilder: deployment.NewSecurityContextBuilder(true),
+		model: handlers.HandlerModel{
+			Kube:                   kubeUtil,
+			KubeClient:             kubeClient,
+			RadixClient:            radixClient,
+			Env:                    env,
+			SecurityContextBuilder: deployment.NewSecurityContextBuilder(true),
+		},
 	}
 
 	t.Run("Create Job", func(t *testing.T) {
@@ -44,11 +47,13 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		radixClient, kubeClient, kubeUtil := setupTest("app", "qa", "compute", "app-deploy-1", 1)
 		env := models.NewEnv()
 		h := &jobHandler{
-			kube:                   kubeUtil,
-			kubeClient:             kubeClient,
-			radixClient:            radixClient,
-			env:                    env,
-			securityContextBuilder: deployment.NewSecurityContextBuilder(true),
+			model: handlers.HandlerModel{
+				Kube:                   kubeUtil,
+				KubeClient:             kubeClient,
+				RadixClient:            radixClient,
+				Env:                    env,
+				SecurityContextBuilder: deployment.NewSecurityContextBuilder(true),
+			},
 		}
 		params := getTestParams().withRadixConfigEnvVarsMap(map[string]string{"VAR1": "val1", "VAR2": "val2"})
 		rd := params.applyRd(kubeUtil)
@@ -69,11 +74,13 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		radixClient, kubeClient, kubeUtil := setupTest("app", "qa", "compute", "app-deploy-1", 1)
 		env := models.NewEnv()
 		h := &jobHandler{
-			kube:                   kubeUtil,
-			kubeClient:             kubeClient,
-			radixClient:            radixClient,
-			env:                    env,
-			securityContextBuilder: deployment.NewSecurityContextBuilder(true),
+			model: handlers.HandlerModel{
+				Kube:                   kubeUtil,
+				KubeClient:             kubeClient,
+				RadixClient:            radixClient,
+				Env:                    env,
+				SecurityContextBuilder: deployment.NewSecurityContextBuilder(true),
+			},
 		}
 		params := getTestParams().
 			withRadixConfigEnvVarsMap(map[string]string{"VAR1": "val1", "VAR2": "orig-val2"}).
@@ -103,11 +110,13 @@ func Test_createJobWithEnvVars(t *testing.T) {
 		radixClient, kubeClient, kubeUtil := setupTest("app", "qa", "compute", "app-deploy-1", 1)
 		env := models.NewEnv()
 		h := &jobHandler{
-			kube:                   kubeUtil,
-			kubeClient:             kubeClient,
-			radixClient:            radixClient,
-			env:                    env,
-			securityContextBuilder: deployment.NewSecurityContextBuilder(true),
+			model: handlers.HandlerModel{
+				Kube:                   kubeUtil,
+				KubeClient:             kubeClient,
+				RadixClient:            radixClient,
+				Env:                    env,
+				SecurityContextBuilder: deployment.NewSecurityContextBuilder(true),
+			},
 		}
 		params := getTestParams().withRadixConfigEnvVarsMap(map[string]string{"VAR1": "val1", "VAR2": "val2"})
 		rd := params.applyRd(kubeUtil)

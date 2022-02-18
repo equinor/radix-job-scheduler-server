@@ -1,4 +1,4 @@
-package job
+package batch
 
 import (
 	"context"
@@ -23,80 +23,81 @@ const (
 	radixJobNameEnvironmentVariable = "RADIX_JOB_NAME"
 )
 
-func (jh *jobHandler) createJob(jobName string, jobComponent *radixv1.RadixDeployJobComponent, rd *radixv1.RadixDeployment, payloadSecret *corev1.Secret, jobScheduleDescription *models.JobScheduleDescription) (*batchv1.Job, error) {
+func (bh *batchHandler) createBatch(jobName string, jobComponent *radixv1.RadixDeployJobComponent, rd *radixv1.RadixDeployment, batchScheduleDescriptionSecret *corev1.Secret) (*batchv1.Job, error) {
 	var jobComponentConfig *models.RadixJobComponentConfig
-	if jobScheduleDescription != nil {
-		jobComponentConfig = &jobScheduleDescription.RadixJobComponentConfig
+	if batchScheduleDescription != nil {
+		jobComponentConfig = &batchScheduleDescription.RadixBatchComponentConfig
 	}
 
-	job, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, err := jh.buildJobSpec(jobName, rd, jobComponent, payloadSecret, jh.model.Kube, jobComponentConfig)
+	job, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, err := bh.buildBatchJobSpec(jobName, rd, jobComponent, batchScheduleDescriptionSecret, bh.model.Kube, jobComponentConfig)
 	if err != nil {
 		return nil, err
 	}
-	namespace := jh.model.Env.RadixDeploymentNamespace
-	createdJobEnvVarsConfigMap, createdJobEnvVarsMetadataConfigMap, err := jh.createEnvVarsConfigMaps(namespace, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap)
+	namespace := bh.model.Env.RadixDeploymentNamespace
+	//TODO - revise
+	createdJobEnvVarsConfigMap, createdJobEnvVarsMetadataConfigMap, err := bh.createEnvVarsConfigMaps(namespace, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap)
 	if err != nil {
 		return nil, err
 	}
-	createdJob, err := jh.model.KubeClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{})
+	createdJob, err := bh.model.KubeClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	err = jh.updateOwnerReferenceOfConfigMaps(createdJob, createdJobEnvVarsConfigMap, createdJobEnvVarsMetadataConfigMap)
+	err = bh.updateOwnerReferenceOfConfigMaps(createdJob, createdJobEnvVarsConfigMap, createdJobEnvVarsMetadataConfigMap)
 	if err != nil {
 		return nil, err
 	}
 	return createdJob, nil
 }
 
-func (jh *jobHandler) createEnvVarsConfigMaps(namespace string, jobEnvVarsConfigMap *corev1.ConfigMap, jobEnvVarsMetadataConfigMap *corev1.ConfigMap) (*corev1.ConfigMap, *corev1.ConfigMap, error) {
-	createdJobEnvVarsConfigMap, err := jh.model.Kube.CreateConfigMap(namespace, jobEnvVarsConfigMap)
+func (bh *batchHandler) createEnvVarsConfigMaps(namespace string, jobEnvVarsConfigMap *corev1.ConfigMap, jobEnvVarsMetadataConfigMap *corev1.ConfigMap) (*corev1.ConfigMap, *corev1.ConfigMap, error) {
+	createdJobEnvVarsConfigMap, err := bh.model.Kube.CreateConfigMap(namespace, jobEnvVarsConfigMap)
 	if err != nil {
 		return nil, nil, err
 	}
-	createdJobEnvVarsMetadataConfigMap, err := jh.model.Kube.CreateConfigMap(namespace, jobEnvVarsMetadataConfigMap)
+	createdJobEnvVarsMetadataConfigMap, err := bh.model.Kube.CreateConfigMap(namespace, jobEnvVarsMetadataConfigMap)
 	if err != nil {
 		return nil, nil, err
 	}
 	return createdJobEnvVarsConfigMap, createdJobEnvVarsMetadataConfigMap, nil
 }
 
-func (jh *jobHandler) updateOwnerReferenceOfConfigMaps(ownerJob *batchv1.Job, configMaps ...*corev1.ConfigMap) error {
+func (bh *batchHandler) updateOwnerReferenceOfConfigMaps(ownerJob *batchv1.Job, configMaps ...*corev1.ConfigMap) error {
 	jobOwnerReferences := getJobOwnerReferences(ownerJob)
 	for _, configMap := range configMaps {
 		configMap.OwnerReferences = jobOwnerReferences
 	}
-	return jh.model.Kube.UpdateConfigMap(ownerJob.ObjectMeta.GetNamespace(), configMaps...)
+	return bh.model.Kube.UpdateConfigMap(ownerJob.ObjectMeta.GetNamespace(), configMaps...)
 }
 
-func (jh *jobHandler) deleteJob(job *batchv1.Job) error {
+func (bh *batchHandler) deleteJob(job *batchv1.Job) error {
 	fg := metav1.DeletePropagationBackground
-	return jh.model.KubeClient.BatchV1().Jobs(job.Namespace).Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &fg})
+	return bh.model.KubeClient.BatchV1().Jobs(job.Namespace).Delete(context.TODO(), job.Name, metav1.DeleteOptions{PropagationPolicy: &fg})
 }
 
-func (jh *jobHandler) getJobByName(jobName string) (*batchv1.Job, error) {
-	jobs, err := jh.getAllJobs()
+func (bh *batchHandler) getBatchByName(batchName string) (*batchv1.Job, error) {
+	batches, err := bh.getAllBatches()
 	if err != nil {
 		return nil, err
 	}
 
-	jobs = jobs.Where(func(j *batchv1.Job) bool { return j.Name == jobName })
+	batches = batches.Where(func(j *batchv1.Job) bool { return j.Name == batchName })
 
-	if len(jobs) == 1 {
-		return jobs[0], nil
+	if len(batches) == 1 {
+		return batches[0], nil
 	}
 
-	return nil, jobErrors.NewNotFound("job", jobName)
+	return nil, jobErrors.NewNotFound("batch", batchName)
 }
 
-func (jh *jobHandler) getAllJobs() (models.JobList, error) {
-	kubeJobs, err := jh.model.KubeClient.
+func (bh *batchHandler) getAllBatches() (models.JobList, error) {
+	kubeBatches, err := bh.model.KubeClient.
 		BatchV1().
-		Jobs(jh.model.Env.RadixDeploymentNamespace).
+		Jobs(bh.model.Env.RadixDeploymentNamespace).
 		List(
 			context.TODO(),
 			metav1.ListOptions{
-				LabelSelector: getLabelSelectorForJobComponent(jh.model.Env.RadixComponentName),
+				LabelSelector: getLabelSelectorForJobComponent(bh.model.Env.RadixComponentName),
 			},
 		)
 
@@ -104,18 +105,18 @@ func (jh *jobHandler) getAllJobs() (models.JobList, error) {
 		return nil, err
 	}
 
-	return slice.PointersOf(kubeJobs.Items).([]*batchv1.Job), nil
+	return slice.PointersOf(kubeBatches.Items).([]*batchv1.Job), nil
 }
 
 //getJobPods jobName is optional, when empty - returns all job-pods for the namespace
-func (jh *jobHandler) getJobPods(jobName string) ([]corev1.Pod, error) {
+func (bh *batchHandler) getJobPods(jobName string) ([]corev1.Pod, error) {
 	listOptions := metav1.ListOptions{}
 	if jobName != "" {
 		listOptions.LabelSelector = getLabelSelectorForJobPods(jobName)
 	}
-	podList, err := jh.model.KubeClient.
+	podList, err := bh.model.KubeClient.
 		CoreV1().
-		Pods(jh.model.Env.RadixDeploymentNamespace).
+		Pods(bh.model.Env.RadixDeploymentNamespace).
 		List(
 			context.TODO(),
 			listOptions,
@@ -128,13 +129,13 @@ func (jh *jobHandler) getJobPods(jobName string) ([]corev1.Pod, error) {
 	return podList.Items, nil
 }
 
-func (jh *jobHandler) buildJobSpec(jobName string, rd *radixv1.RadixDeployment, radixJobComponent *radixv1.RadixDeployJobComponent, payloadSecret *corev1.Secret, kubeutil *kube.Kube, jobComponentConfig *models.RadixJobComponentConfig) (*batchv1.Job, *corev1.ConfigMap, *corev1.ConfigMap, error) {
-	podSecurityContext := jh.model.SecurityContextBuilder.BuildPodSecurityContext(radixJobComponent)
-	volumes, err := jh.getVolumes(rd.ObjectMeta.Namespace, rd.Spec.Environment, radixJobComponent, rd.Name, payloadSecret)
+func (bh *batchHandler) buildBatchJobSpec(batchName string, rd *radixv1.RadixDeployment, radixJobComponent *radixv1.RadixDeployJobComponent, batchScheduleDescriptionSecret *corev1.Secret, kubeutil *kube.Kube) (*batchv1.Job, *corev1.ConfigMap, *corev1.ConfigMap, error) {
+	podSecurityContext := bh.model.SecurityContextBuilder.BuildPodSecurityContext(radixJobComponent)
+	volumes, err := bh.getVolumes(rd.ObjectMeta.Namespace, rd.Spec.Environment, radixJobComponent, rd.Name, batchScheduleDescriptionSecret)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	containers, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, err := getContainersWithEnvVarsConfigMaps(kubeutil, rd, jobName, radixJobComponent, payloadSecret, jobComponentConfig, jh.model.SecurityContextBuilder)
+	containers, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, err := getContainersWithEnvVarsConfigMaps(kubeutil, rd, batchName, radixJobComponent, batchScheduleDescriptionSecret, jobComponentConfig, bh.model.SecurityContextBuilder)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -155,7 +156,7 @@ func (jh *jobHandler) buildJobSpec(jobName string, rd *radixv1.RadixDeployment, 
 
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: jobName,
+			Name: batchName,
 			Labels: map[string]string{
 				kube.RadixAppLabel:       rd.Spec.AppName,
 				kube.RadixComponentLabel: radixJobComponent.Name,
@@ -187,18 +188,18 @@ func (jh *jobHandler) buildJobSpec(jobName string, rd *radixv1.RadixDeployment, 
 	}, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, nil
 }
 
-func getContainersWithEnvVarsConfigMaps(kubeUtils *kube.Kube, rd *radixv1.RadixDeployment, jobName string, radixJobComponent *radixv1.RadixDeployJobComponent, payloadSecret *corev1.Secret, jobComponentConfig *models.RadixJobComponentConfig, securityContextBuilder deployment.SecurityContextBuilder) ([]corev1.Container, *corev1.ConfigMap, *corev1.ConfigMap, error) {
+func getContainersWithEnvVarsConfigMaps(kubeUtils *kube.Kube, rd *radixv1.RadixDeployment, jobName string, radixJobComponent *radixv1.RadixDeployJobComponent, batchScheduleDescriptionSecret *corev1.Secret, jobComponentConfig *models.RadixJobComponentConfig, securityContextBuilder deployment.SecurityContextBuilder) ([]corev1.Container, *corev1.ConfigMap, *corev1.ConfigMap, error) {
 	environmentVariables, jobEnvVarsConfigMap, jobEnvVarsMetadataConfigMap, err := buildEnvironmentVariablesWithEnvVarsConfigMaps(kubeUtils, rd, jobName, radixJobComponent)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	ports := getContainerPorts(radixJobComponent)
-	containerSecurityContext := securityContextBuilder.BuildContainerSecurityContext(radixJobComponent)
-	volumeMounts, err := getVolumeMounts(radixJobComponent, rd.GetName(), payloadSecret)
+	volumeMounts, err := getVolumeMounts(batchScheduleDescriptionSecret)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	resources := getResourceRequirements(radixJobComponent, jobComponentConfig)
+	containerSecurityContext := securityContextBuilder.BuildContainerSecurityContext(radixJobComponent)
 
 	container := corev1.Container{
 		Name:            radixJobComponent.Name,
@@ -254,24 +255,21 @@ func getJobOwnerReferences(job *batchv1.Job) []metav1.OwnerReference {
 	}
 }
 
-func getVolumeMounts(radixJobComponent *radixv1.RadixDeployJobComponent, radixDeploymentName string, payloadSecret *corev1.Secret) ([]corev1.VolumeMount, error) {
-	volumeMounts, err := deployment.GetRadixDeployComponentVolumeMounts(radixJobComponent, radixDeploymentName)
-	if err != nil {
-		return nil, err
-	}
-	if payloadSecret != nil {
+func getVolumeMounts(batchScheduleDescriptionSecret *corev1.Secret) ([]corev1.VolumeMount, error) {
+	volumeMounts := make([]corev1.VolumeMount, 0)
+	if batchScheduleDescriptionSecret != nil {
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
-			Name:      jobPayloadPropertyName,
+			Name:      batchScheduleDescriptionSecretPropertyName,
 			ReadOnly:  true,
-			MountPath: radixJobComponent.Payload.Path,
+			MountPath: "/mnt/secrets",
 		})
 	}
 
 	return volumeMounts, nil
 }
 
-func (jh *jobHandler) getVolumes(namespace, environment string, radixJobComponent *radixv1.RadixDeployJobComponent, radixDeploymentName string, payloadSecret *corev1.Secret) ([]corev1.Volume, error) {
-	volumes, err := deployment.GetVolumes(jh.model.KubeClient, jh.model.Kube, namespace, environment, radixJobComponent, radixDeploymentName)
+func (bh *batchHandler) getVolumes(namespace, environment string, radixJobComponent *radixv1.RadixDeployJobComponent, radixDeploymentName string, payloadSecret *corev1.Secret) ([]corev1.Volume, error) {
+	volumes, err := deployment.GetVolumes(bh.model.KubeClient, bh.model.Kube, namespace, environment, radixJobComponent, radixDeploymentName)
 	if err != nil {
 		return nil, err
 	}

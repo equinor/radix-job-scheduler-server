@@ -52,4 +52,5 @@ docker-push-main:
 
 .PHONY: generate-mock
 generate-mock:
-	mockgen -source ./api/handlers/job/handler.go -destination ./api/handlers/job/test/handler_mock.go -package mock
+	mockgen -source ./api/handlers/job/handler.go -destination ./api/handlers/job/mock/handler_mock.go -package mock
+	mockgen -source ./api/handlers/batch/handler.go -destination ./api/handlers/batch/mock/handler_mock.go -package mock

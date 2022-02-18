@@ -1,4 +1,4 @@
-package job
+package batch
 
 import (
 	"errors"
@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/equinor/radix-job-scheduler-server/api/controllers/testutils"
-	jobErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
-	jobHandlers "github.com/equinor/radix-job-scheduler-server/api/handlers/job"
-	jobHandlersTest "github.com/equinor/radix-job-scheduler-server/api/handlers/job/mock"
+	batchErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
+	batchHandlers "github.com/equinor/radix-job-scheduler-server/api/handlers/batch"
+	batchHandlersTest "github.com/equinor/radix-job-scheduler-server/api/handlers/batch/mock"
 	"github.com/equinor/radix-job-scheduler-server/api/utils"
 	"github.com/equinor/radix-job-scheduler/models"
 	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
@@ -18,60 +18,60 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTest(jobHandler jobHandlers.Handler) *testutils.ControllerTestUtils {
-	jobController := jobController{jobHandler: jobHandler}
-	controllerTestUtils := testutils.New(&jobController)
+func setupTest(batchHandler batchHandlers.Handler) *testutils.ControllerTestUtils {
+	controller := batchController{handler: batchHandler}
+	controllerTestUtils := testutils.New(&controller)
 	return &controllerTestUtils
 }
 
-func TestGetJobs(t *testing.T) {
-	t.Run("Get jobs - success", func(t *testing.T) {
+func TestGetBatches(t *testing.T) {
+	t.Run("Get batchs - success", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobState := models.JobStatus{
-			Name:    "jobname",
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchState := models.BatchStatus{
+			Name:    "batchname",
 			Started: utils.FormatTimestamp(time.Now()),
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-			Status:  "jobstatus",
+			Status:  "batchstatus",
 		}
-		jobHandler.
+		batchHandler.
 			EXPECT().
-			GetJobs().
-			Return([]models.JobStatus{jobState}, nil).
+			GetBatches().
+			Return([]models.BatchStatus{batchState}, nil).
 			Times(1)
 
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/jobs")
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batchs")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedJobs []models.JobStatus
-			testutils.GetResponseBody(response, &returnedJobs)
-			assert.Len(t, returnedJobs, 1)
-			assert.Equal(t, jobState.Name, returnedJobs[0].Name)
-			assert.Equal(t, jobState.Started, returnedJobs[0].Started)
-			assert.Equal(t, jobState.Ended, returnedJobs[0].Ended)
-			assert.Equal(t, jobState.Status, returnedJobs[0].Status)
+			var returnedBatches []models.BatchStatus
+			testutils.GetResponseBody(response, &returnedBatches)
+			assert.Len(t, returnedBatches, 1)
+			assert.Equal(t, batchState.Name, returnedBatches[0].Name)
+			assert.Equal(t, batchState.Started, returnedBatches[0].Started)
+			assert.Equal(t, batchState.Ended, returnedBatches[0].Ended)
+			assert.Equal(t, batchState.Status, returnedBatches[0].Status)
 		}
 	})
 
-	t.Run("Get jobs - status code 500", func(t *testing.T) {
+	t.Run("Get batchs - status code 500", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			GetJobs().
+			GetBatches().
 			Return(nil, errors.New("unhandled error")).
 			Times(1)
 
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/jobs")
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batchs")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -86,38 +86,38 @@ func TestGetJobs(t *testing.T) {
 	})
 }
 
-func TestGetJob(t *testing.T) {
+func TestGetBatch(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobName := "jobname"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobState := models.JobStatus{
-			Name:    jobName,
+		batchName := "batchname"
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchState := models.BatchStatus{
+			Name:    batchName,
 			Started: utils.FormatTimestamp(time.Now()),
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-			Status:  "jobstatus",
+			Status:  "batchstatus",
 		}
-		jobHandler.
+		batchHandler.
 			EXPECT().
-			GetJob(jobName).
-			Return(&jobState, nil).
+			GetBatch(batchName).
+			Return(&batchState, nil).
 			Times(1)
 
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/jobs/%s", jobName))
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batchs/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
-			assert.Equal(t, jobState.Name, returnedJob.Name)
-			assert.Equal(t, jobState.Started, returnedJob.Started)
-			assert.Equal(t, jobState.Ended, returnedJob.Ended)
-			assert.Equal(t, jobState.Status, returnedJob.Status)
+			var returnedBatch models.BatchStatus
+			testutils.GetResponseBody(response, &returnedBatch)
+			assert.Equal(t, batchState.Name, returnedBatch.Name)
+			assert.Equal(t, batchState.Started, returnedBatch.Started)
+			assert.Equal(t, batchState.Ended, returnedBatch.Ended)
+			assert.Equal(t, batchState.Status, returnedBatch.Status)
 		}
 	})
 
@@ -125,16 +125,16 @@ func TestGetJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobName, kind := "anyjob", "job"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchName, kind := "anybatch", "batch"
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			GetJob(gomock.Any()).
-			Return(nil, jobErrors.NewNotFound(kind, jobName)).
+			GetBatch(gomock.Any()).
+			Return(nil, batchErrors.NewNotFound(kind, batchName)).
 			Times(1)
 
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/jobs/%s", jobName))
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batchs/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -145,7 +145,7 @@ func TestGetJob(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.NotFoundMessage(kind, jobName), returnedStatus.Message)
+			assert.Equal(t, batchErrors.NotFoundMessage(kind, batchName), returnedStatus.Message)
 		}
 	})
 
@@ -153,15 +153,15 @@ func TestGetJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			GetJob(gomock.Any()).
+			GetBatch(gomock.Any()).
 			Return(nil, errors.New("unhandled error")).
 			Times(1)
 
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/jobs/%s", "anyjob"))
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batchs/%s", "anybatch"))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -176,42 +176,42 @@ func TestGetJob(t *testing.T) {
 	})
 }
 
-func TestCreateJob(t *testing.T) {
+func TestCreateBatch(t *testing.T) {
 	t.Run("empty body - successful", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobScheduleDescription := models.JobScheduleDescription{}
-		createdJob := models.JobStatus{
-			Name:    "newjob",
+		batchScheduleDescription := models.BatchScheduleDescription{}
+		createdBatch := models.BatchStatus{
+			Name:    "newbatch",
 			Started: utils.FormatTimestamp(time.Now()),
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-			Status:  "jobstatus",
+			Status:  "batchstatus",
 		}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
-			Return(&createdJob, nil).
+			CreateBatch(&batchScheduleDescription).
+			Return(&createdBatch, nil).
 			Times(1)
-		jobHandler.
+		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
 			Return(nil).
 			Times(1)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/jobs", nil)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", nil)
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
-			assert.Equal(t, createdJob.Name, returnedJob.Name)
-			assert.Equal(t, createdJob.Started, returnedJob.Started)
-			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
-			assert.Equal(t, createdJob.Status, returnedJob.Status)
+			var returnedBatch models.BatchStatus
+			testutils.GetResponseBody(response, &returnedBatch)
+			assert.Equal(t, createdBatch.Name, returnedBatch.Name)
+			assert.Equal(t, createdBatch.Started, returnedBatch.Started)
+			assert.Equal(t, createdBatch.Ended, returnedBatch.Ended)
+			assert.Equal(t, createdBatch.Status, returnedBatch.Status)
 		}
 	})
 
@@ -219,55 +219,59 @@ func TestCreateJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobScheduleDescription := models.JobScheduleDescription{
-			Payload: "a_payload",
-			RadixJobComponentConfig: models.RadixJobComponentConfig{
-				Resources: &v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						"cpu":    "20m",
-						"memory": "256M",
+		batchScheduleDescription := models.BatchScheduleDescription{
+			JobScheduleDescriptions: []models.JobScheduleDescription{
+				{
+					Payload: "a_payload",
+					RadixJobComponentConfig: models.RadixJobComponentConfig{
+						Resources: &v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								"cpu":    "20m",
+								"memory": "256M",
+							},
+							Limits: v1.ResourceList{
+								"cpu":    "10m",
+								"memory": "128M",
+							},
+						},
+						Node: &v1.RadixNode{
+							Gpu:      "nvidia",
+							GpuCount: "6",
+						},
 					},
-					Limits: v1.ResourceList{
-						"cpu":    "10m",
-						"memory": "128M",
-					},
-				},
-				Node: &v1.RadixNode{
-					Gpu:      "nvidia",
-					GpuCount: "6",
 				},
 			},
 		}
-		createdJob := models.JobStatus{
-			Name:    "newjob",
+		createdBatch := models.BatchStatus{
+			Name:    "newbatch",
 			Started: utils.FormatTimestamp(time.Now()),
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-			Status:  "jobstatus",
+			Status:  "batchstatus",
 		}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
-			Return(&createdJob, nil).
+			CreateBatch(&batchScheduleDescription).
+			Return(&createdBatch, nil).
 			Times(1)
-		jobHandler.
+		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
 			Return(nil).
 			Times(1)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/jobs", jobScheduleDescription)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", batchScheduleDescription)
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
-			assert.Equal(t, createdJob.Name, returnedJob.Name)
-			assert.Equal(t, createdJob.Started, returnedJob.Started)
-			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
-			assert.Equal(t, createdJob.Status, returnedJob.Status)
+			var returnedBatch models.BatchStatus
+			testutils.GetResponseBody(response, &returnedBatch)
+			assert.Equal(t, createdBatch.Name, returnedBatch.Name)
+			assert.Equal(t, createdBatch.Started, returnedBatch.Started)
+			assert.Equal(t, createdBatch.Ended, returnedBatch.Ended)
+			assert.Equal(t, createdBatch.Status, returnedBatch.Status)
 		}
 	})
 
@@ -275,39 +279,41 @@ func TestCreateJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobScheduleDescription := models.JobScheduleDescription{
-			Payload: "a_payload",
+		batchScheduleDescription := models.BatchScheduleDescription{
+			JobScheduleDescriptions: []models.JobScheduleDescription{
+				{Payload: "a_payload"},
+			},
 		}
-		createdJob := models.JobStatus{
-			Name:    "newjob",
+		createdBatch := models.BatchStatus{
+			Name:    "newbatch",
 			Started: utils.FormatTimestamp(time.Now()),
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-			Status:  "jobstatus",
+			Status:  "batchstatus",
 		}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
-			Return(&createdJob, nil).
+			CreateBatch(&batchScheduleDescription).
+			Return(&createdBatch, nil).
 			Times(1)
-		jobHandler.
+		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
 			Return(errors.New("an error")).
 			Times(1)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/jobs", jobScheduleDescription)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", batchScheduleDescription)
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
-			assert.Equal(t, createdJob.Name, returnedJob.Name)
-			assert.Equal(t, createdJob.Started, returnedJob.Started)
-			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
-			assert.Equal(t, createdJob.Status, returnedJob.Status)
+			var returnedBatch models.BatchStatus
+			testutils.GetResponseBody(response, &returnedBatch)
+			assert.Equal(t, createdBatch.Name, returnedBatch.Name)
+			assert.Equal(t, createdBatch.Started, returnedBatch.Started)
+			assert.Equal(t, createdBatch.Ended, returnedBatch.Ended)
+			assert.Equal(t, createdBatch.Status, returnedBatch.Status)
 		}
 	})
 
@@ -316,17 +322,17 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			CreateJob(gomock.Any()).
+			CreateBatch(gomock.Any()).
 			Times(0)
-		jobHandler.
+		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
 			Times(0)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/jobs", struct{ Payload interface{} }{Payload: struct{}{}})
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", struct{ Payload interface{} }{Payload: struct{}{}})
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -337,7 +343,7 @@ func TestCreateJob(t *testing.T) {
 			assert.Equal(t, http.StatusUnprocessableEntity, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonInvalid, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.InvalidMessage("payload"), returnedStatus.Message)
+			assert.Equal(t, batchErrors.InvalidMessage("payload"), returnedStatus.Message)
 		}
 	})
 
@@ -345,20 +351,20 @@ func TestCreateJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		batchScheduleDescription := models.BatchScheduleDescription{}
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
 		anyKind, anyName := "anyKind", "anyName"
-		jobHandler.
+		batchHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
-			Return(nil, jobErrors.NewNotFound(anyKind, anyName)).
+			CreateBatch(&batchScheduleDescription).
+			Return(nil, batchErrors.NewNotFound(anyKind, anyName)).
 			Times(1)
-		jobHandler.
+		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
 			Times(0)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/jobs")
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/batchs")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -369,7 +375,7 @@ func TestCreateJob(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.NotFoundMessage(anyKind, anyName), returnedStatus.Message)
+			assert.Equal(t, batchErrors.NotFoundMessage(anyKind, anyName), returnedStatus.Message)
 		}
 	})
 
@@ -377,19 +383,19 @@ func TestCreateJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchScheduleDescription := models.BatchScheduleDescription{}
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
+			CreateBatch(&batchScheduleDescription).
 			Return(nil, errors.New("any error")).
 			Times(1)
-		jobHandler.
+		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
 			Times(0)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/jobs")
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/batchs")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -404,20 +410,20 @@ func TestCreateJob(t *testing.T) {
 	})
 }
 
-func TestDeleteJob(t *testing.T) {
+func TestDeleteBatch(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobName := "anyjob"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchName := "anybatch"
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			DeleteJob(jobName).
+			DeleteBatch(batchName).
 			Return(nil).
 			Times(1)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/jobs/%s", jobName))
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batchs/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -435,15 +441,15 @@ func TestDeleteJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobName := "anyjob"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchName := "anybatch"
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			DeleteJob(jobName).
-			Return(jobErrors.NewNotFound("job", jobName)).
+			DeleteBatch(batchName).
+			Return(batchErrors.NewNotFound("batch", batchName)).
 			Times(1)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/jobs/%s", jobName))
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batchs/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -454,7 +460,7 @@ func TestDeleteJob(t *testing.T) {
 			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.NotFoundMessage("job", jobName), returnedStatus.Message)
+			assert.Equal(t, batchErrors.NotFoundMessage("batch", batchName), returnedStatus.Message)
 		}
 	})
 
@@ -462,15 +468,15 @@ func TestDeleteJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobName := "anyjob"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
-		jobHandler.
+		batchName := "anybatch"
+		batchHandler := batchHandlersTest.NewMockHandler(ctrl)
+		batchHandler.
 			EXPECT().
-			DeleteJob(jobName).
+			DeleteBatch(batchName).
 			Return(errors.New("any error")).
 			Times(1)
-		controllerTestUtils := setupTest(jobHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/jobs/%s", jobName))
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batchs/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 

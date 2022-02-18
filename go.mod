@@ -63,4 +63,7 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-replace k8s.io/client-go => k8s.io/client-go v0.22.4
+replace (
+	github.com/equinor/radix-job-scheduler => /home/user1/go/src/github.com/equinor/radix-job-scheduler
+	k8s.io/client-go => k8s.io/client-go v0.22.4
+)
