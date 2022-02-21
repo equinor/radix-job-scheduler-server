@@ -1,60 +1,60 @@
 package job
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+    "encoding/json"
+    "fmt"
+    "io/ioutil"
+    "net/http"
 
-	"github.com/equinor/radix-job-scheduler-server/api/controllers"
-	jobErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
-	jh "github.com/equinor/radix-job-scheduler-server/api/handlers/job"
-	"github.com/equinor/radix-job-scheduler-server/models"
-	"github.com/equinor/radix-job-scheduler-server/utils"
-	schedulerModels "github.com/equinor/radix-job-scheduler/models"
-	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
+    "github.com/equinor/radix-job-scheduler-server/api/controllers"
+    jobErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
+    "github.com/equinor/radix-job-scheduler-server/models"
+    "github.com/equinor/radix-job-scheduler-server/utils"
+    schedulerModels "github.com/equinor/radix-job-scheduler/models"
+    jobsModels "github.com/equinor/radix-job-scheduler/models/jobs"
+    "github.com/gorilla/mux"
+    log "github.com/sirupsen/logrus"
 )
 
 const jobNameParam = "jobName"
 
 type jobController struct {
-	*controllers.ControllerBase
-	jobHandler jh.Handler
+    *controllers.ControllerBase
+    model jobsModels.JobModel
 }
 
 // New create a new job controller
-func New(jobHandler jh.Handler) models.Controller {
-	return &jobController{
-		jobHandler: jobHandler,
-	}
+func New(jobModel jobsModels.JobModel) models.Controller {
+    return &jobController{
+        model: jobModel,
+    }
 }
 
 // GetRoutes List the supported routes of this controller
 func (controller *jobController) GetRoutes() models.Routes {
-	routes := models.Routes{
-		models.Route{
-			Path:        "/jobs",
-			Method:      http.MethodPost,
-			HandlerFunc: controller.CreateJob,
-		},
-		models.Route{
-			Path:        "/jobs",
-			Method:      http.MethodGet,
-			HandlerFunc: controller.GetJobs,
-		},
-		models.Route{
-			Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
-			Method:      http.MethodGet,
-			HandlerFunc: controller.GetJob,
-		},
-		models.Route{
-			Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
-			Method:      http.MethodDelete,
-			HandlerFunc: controller.DeleteJob,
-		},
-	}
-	return routes
+    routes := models.Routes{
+        models.Route{
+            Path:        "/jobs",
+            Method:      http.MethodPost,
+            HandlerFunc: controller.CreateJob,
+        },
+        models.Route{
+            Path:        "/jobs",
+            Method:      http.MethodGet,
+            HandlerFunc: controller.GetJobs,
+        },
+        models.Route{
+            Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
+            Method:      http.MethodGet,
+            HandlerFunc: controller.GetJob,
+        },
+        models.Route{
+            Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
+            Method:      http.MethodDelete,
+            HandlerFunc: controller.DeleteJob,
+        },
+    }
+    return routes
 }
 
 // swagger:operation POST /jobs Job createJob
@@ -89,26 +89,26 @@ func (controller *jobController) GetRoutes() models.Routes {
 //     schema:
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Request) {
-	var jobScheduleDescription schedulerModels.JobScheduleDescription
+    var jobScheduleDescription jobsModels.JobScheduleDescription
 
-	if body, _ := ioutil.ReadAll(r.Body); len(body) > 0 {
-		if err := json.Unmarshal(body, &jobScheduleDescription); err != nil {
-			controller.HandleError(w, jobErrors.NewInvalid("payload"))
-			return
-		}
-	}
+    if body, _ := ioutil.ReadAll(r.Body); len(body) > 0 {
+        if err := json.Unmarshal(body, &jobScheduleDescription); err != nil {
+            controller.HandleError(w, jobErrors.NewInvalid("payload"))
+            return
+        }
+    }
 
-	jobState, err := controller.jobHandler.CreateJob(&jobScheduleDescription)
-	if err != nil {
-		controller.HandleError(w, err)
-		return
-	}
-	err = controller.jobHandler.MaintainHistoryLimit()
-	if err != nil {
-		log.Warnf("failed to maintain job history: %v", err)
-	}
+    jobState, err := controller.model.CreateJob(&jobScheduleDescription)
+    if err != nil {
+        controller.HandleError(w, err)
+        return
+    }
+    err = controller.model.MaintainHistoryLimit()
+    if err != nil {
+        log.Warnf("failed to maintain job history: %v", err)
+    }
 
-	utils.JSONResponse(w, &jobState)
+    utils.JSONResponse(w, &jobState)
 }
 
 // swagger:operation GET /jobs/ Job getJobs
@@ -127,14 +127,14 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 //     schema:
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request) {
-	log.Debug("Get job list")
-	jobs, err := controller.jobHandler.GetJobs()
-	if err != nil {
-		controller.HandleError(w, err)
-		return
-	}
-	log.Debugf("Found %d jobs", len(jobs))
-	utils.JSONResponse(w, jobs)
+    log.Debug("Get job list")
+    jobs, err := controller.model.GetJobs()
+    if err != nil {
+        controller.HandleError(w, err)
+        return
+    }
+    log.Debugf("Found %d jobs", len(jobs))
+    utils.JSONResponse(w, jobs)
 }
 
 // swagger:operation GET /jobs/{jobName} Job getJob
@@ -160,14 +160,14 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 //     schema:
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) {
-	jobName := mux.Vars(r)[jobNameParam]
-	log.Debugf("Get job %s", jobName)
-	job, err := controller.jobHandler.GetJob(jobName)
-	if err != nil {
-		controller.HandleError(w, err)
-		return
-	}
-	utils.JSONResponse(w, job)
+    jobName := mux.Vars(r)[jobNameParam]
+    log.Debugf("Get job %s", jobName)
+    job, err := controller.model.GetJob(jobName)
+    if err != nil {
+        controller.HandleError(w, err)
+        return
+    }
+    utils.JSONResponse(w, job)
 }
 
 // swagger:operation DELETE /jobs/{jobName} Job deleteJob
@@ -193,18 +193,18 @@ func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) 
 //     schema:
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) DeleteJob(w http.ResponseWriter, r *http.Request) {
-	jobName := mux.Vars(r)[jobNameParam]
-	log.Debugf("Delete job %s", jobName)
-	err := controller.jobHandler.DeleteJob(jobName)
-	if err != nil {
-		controller.HandleError(w, err)
-		return
-	}
+    jobName := mux.Vars(r)[jobNameParam]
+    log.Debugf("Delete job %s", jobName)
+    err := controller.model.DeleteJob(jobName)
+    if err != nil {
+        controller.HandleError(w, err)
+        return
+    }
 
-	status := schedulerModels.Status{
-		Status:  schedulerModels.StatusSuccess,
-		Code:    http.StatusOK,
-		Message: fmt.Sprintf("job %s successfully deleted", jobName),
-	}
-	utils.StatusResponse(w, &status)
+    status := schedulerModels.Status{
+        Status:  schedulerModels.StatusSuccess,
+        Code:    http.StatusOK,
+        Message: fmt.Sprintf("job %s successfully deleted", jobName),
+    }
+    utils.StatusResponse(w, &status)
 }
