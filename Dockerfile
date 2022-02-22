@@ -4,7 +4,7 @@ ENV GO111MODULE=on
 RUN addgroup -S -g 1000 job-scheduler
 RUN adduser -S -u 1000 -G job-scheduler job-scheduler
 
-RUN apk update && \
+RUN apk update && apk upgrade && \
     apk add bash jq alpine-sdk sed gawk git ca-certificates curl && \
     apk add --no-cache gcc musl-dev && \
     go get -u golang.org/x/lint/golint && \
