@@ -54,10 +54,10 @@ func TestGetBatches(t *testing.T) {
 			var returnedBatches []models.BatchStatus
 			test.GetResponseBody(response, &returnedBatches)
 			assert.Len(t, returnedBatches, 1)
-			assert.Equal(t, batchState.Name, returnedBatches[0].Name)
-			assert.Equal(t, batchState.Started, returnedBatches[0].Started)
-			assert.Equal(t, batchState.Ended, returnedBatches[0].Ended)
-			assert.Equal(t, batchState.Status, returnedBatches[0].Status)
+			assert.Equal(t, batchState.JobStatus.Name, returnedBatches[0].Name)
+			assert.Equal(t, batchState.JobStatus.Started, returnedBatches[0].Started)
+			assert.Equal(t, batchState.JobStatus.Ended, returnedBatches[0].Ended)
+			assert.Equal(t, batchState.JobStatus.Status, returnedBatches[0].Status)
 		}
 	})
 

@@ -64,5 +64,5 @@ require (
 
 replace (
 	github.com/equinor/radix-job-scheduler => /home/user1/go/src/github.com/equinor/radix-job-scheduler
-	k8s.io/client-go => k8s.io/client-go v0.22.4
+	k8s.io/client-go => k8s.io/client-go v0.23.4
 )
