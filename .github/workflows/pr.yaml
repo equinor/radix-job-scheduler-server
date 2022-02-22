@@ -12,4 +12,4 @@ jobs:
     - name: Build docker image
       env:
         REF: ${{ github. sha }}
-      run: docker build -t radix-api:${REF##*/} .
+      run: docker build -t radix-job-scheduler-server:${REF##*/} .
