@@ -93,7 +93,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 
 	if body, _ := ioutil.ReadAll(r.Body); len(body) > 0 {
 		if err := json.Unmarshal(body, &batchScheduleDescription); err != nil {
-			controller.HandleError(w, apiErrors.NewInvalid("payload"))
+			controller.HandleError(w, apiErrors.NewInvalid("BatchScheduleDescription"))
 			return
 		}
 	}

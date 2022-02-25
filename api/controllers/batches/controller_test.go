@@ -25,7 +25,7 @@ func setupTest(batch batchApi.Batch) *test.ControllerTestUtils {
 }
 
 func TestGetBatches(t *testing.T) {
-	t.Run("Get batchs - success", func(t *testing.T) {
+	t.Run("Get batches - success", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -45,7 +45,7 @@ func TestGetBatches(t *testing.T) {
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batchs")
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batches")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -61,7 +61,7 @@ func TestGetBatches(t *testing.T) {
 		}
 	})
 
-	t.Run("Get batchs - status code 500", func(t *testing.T) {
+	t.Run("Get batches - status code 500", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -73,7 +73,7 @@ func TestGetBatches(t *testing.T) {
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batchs")
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batches")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -110,7 +110,7 @@ func TestGetBatch(t *testing.T) {
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batchs/%s", batchName))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -138,7 +138,7 @@ func TestGetBatch(t *testing.T) {
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batchs/%s", batchName))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -165,7 +165,7 @@ func TestGetBatch(t *testing.T) {
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batchs/%s", "anybatch"))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s", "anybatch"))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -206,7 +206,7 @@ func TestCreateBatch(t *testing.T) {
 			Return(nil).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", nil)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batches", nil)
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -268,7 +268,7 @@ func TestCreateBatch(t *testing.T) {
 			Return(nil).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", batchScheduleDescription)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batches", batchScheduleDescription)
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -312,7 +312,7 @@ func TestCreateBatch(t *testing.T) {
 			Return(errors.New("an error")).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", batchScheduleDescription)
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batches", batchScheduleDescription)
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -342,7 +342,7 @@ func TestCreateBatch(t *testing.T) {
 			MaintainHistoryLimit().
 			Times(0)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batchs", struct{ Payload interface{} }{Payload: struct{}{}})
+		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batches", struct{ JobScheduleDescriptions interface{} }{JobScheduleDescriptions: struct{}{}})
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -353,7 +353,7 @@ func TestCreateBatch(t *testing.T) {
 			assert.Equal(t, http.StatusUnprocessableEntity, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonInvalid, returnedStatus.Reason)
-			assert.Equal(t, apiErrors.InvalidMessage("payload"), returnedStatus.Message)
+			assert.Equal(t, apiErrors.InvalidMessage("BatchScheduleDescription"), returnedStatus.Message)
 		}
 	})
 
@@ -374,7 +374,7 @@ func TestCreateBatch(t *testing.T) {
 			MaintainHistoryLimit().
 			Times(0)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/batchs")
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/batches")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -405,7 +405,7 @@ func TestCreateBatch(t *testing.T) {
 			MaintainHistoryLimit().
 			Times(0)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/batchs")
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, "/api/v1/batches")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -433,7 +433,7 @@ func TestDeleteBatch(t *testing.T) {
 			Return(nil).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batchs/%s", batchName))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -459,7 +459,7 @@ func TestDeleteBatch(t *testing.T) {
 			Return(apiErrors.NewNotFound("batch", batchName)).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batchs/%s", batchName))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
@@ -486,7 +486,7 @@ func TestDeleteBatch(t *testing.T) {
 			Return(errors.New("any error")).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batchs/%s", batchName))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 

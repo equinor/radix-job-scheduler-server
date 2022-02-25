@@ -49,7 +49,7 @@ func getControllers(env *apiModels.Env) []models.Controller {
 	kubeUtil, _ := kube.New(kubeClient, radixClient, secretProviderClient)
 
 	return []models.Controller{
-		jobControllers.New(jobApi.New(env, kubeUtil, kubeClient, radixClient)),
+		jobControllers.New(jobApi.New(env, kubeUtil)),
 		batchControllers.New(batchApi.New(env, kubeUtil, kubeClient, radixClient)),
 	}
 }

@@ -98,7 +98,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	jobState, err := controller.handler.CreateJob(&jobScheduleDescription)
+	jobState, err := controller.handler.CreateJob(&jobScheduleDescription, "")
 	if err != nil {
 		controller.HandleError(w, err)
 		return
