@@ -20,13 +20,13 @@ const batchNameParam = "batchName"
 
 type batchController struct {
 	*controllers.ControllerBase
-	handler api.Batch
+	handler api.BatchHandler
 }
 
 // New create a new batch controller
-func New(batch api.Batch) models.Controller {
+func New(handler api.BatchHandler) models.Controller {
 	return &batchController{
-		handler: batch,
+		handler: handler,
 	}
 }
 

@@ -20,13 +20,13 @@ const jobNameParam = "jobName"
 
 type jobController struct {
 	*controllers.ControllerBase
-	handler api.Job
+	handler api.JobHandler
 }
 
 // New create a new job controller
-func New(job api.Job) models.Controller {
+func New(handler api.JobHandler) models.Controller {
 	return &jobController{
-		handler: job,
+		handler: handler,
 	}
 }
 

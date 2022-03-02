@@ -18,8 +18,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTest(batch batchApi.Batch) *test.ControllerTestUtils {
-	controller := batchController{handler: batch}
+func setupTest(handler batchApi.BatchHandler) *test.ControllerTestUtils {
+	controller := batchController{handler: handler}
 	controllerTestUtils := test.New(&controller)
 	return &controllerTestUtils
 }

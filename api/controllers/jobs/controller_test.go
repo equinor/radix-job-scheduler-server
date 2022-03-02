@@ -18,8 +18,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTest(job jobApi.Job) *test.ControllerTestUtils {
-	jobController := jobController{handler: job}
+func setupTest(handler jobApi.JobHandler) *test.ControllerTestUtils {
+	jobController := jobController{handler: handler}
 	controllerTestUtils := test.New(&jobController)
 	return &controllerTestUtils
 }
