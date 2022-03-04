@@ -1,4 +1,4 @@
-package job
+package jobs
 
 import (
 	"encoding/json"
@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/equinor/radix-job-scheduler-server/api/controllers"
-	jobErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
-	jh "github.com/equinor/radix-job-scheduler-server/api/handlers/job"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/utils"
-	schedulerModels "github.com/equinor/radix-job-scheduler/models"
+	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
+	api "github.com/equinor/radix-job-scheduler/api/jobs"
+	apiModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -20,13 +20,13 @@ const jobNameParam = "jobName"
 
 type jobController struct {
 	*controllers.ControllerBase
-	jobHandler jh.Handler
+	handler api.JobHandler
 }
 
 // New create a new job controller
-func New(jobHandler jh.Handler) models.Controller {
+func New(handler api.JobHandler) models.Controller {
 	return &jobController{
-		jobHandler: jobHandler,
+		handler: handler,
 	}
 }
 
@@ -89,21 +89,21 @@ func (controller *jobController) GetRoutes() models.Routes {
 //     schema:
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Request) {
-	var jobScheduleDescription schedulerModels.JobScheduleDescription
+	var jobScheduleDescription apiModels.JobScheduleDescription
 
 	if body, _ := ioutil.ReadAll(r.Body); len(body) > 0 {
 		if err := json.Unmarshal(body, &jobScheduleDescription); err != nil {
-			controller.HandleError(w, jobErrors.NewInvalid("payload"))
+			controller.HandleError(w, apiErrors.NewInvalid("payload"))
 			return
 		}
 	}
 
-	jobState, err := controller.jobHandler.CreateJob(&jobScheduleDescription)
+	jobState, err := controller.handler.CreateJob(&jobScheduleDescription, "")
 	if err != nil {
 		controller.HandleError(w, err)
 		return
 	}
-	err = controller.jobHandler.MaintainHistoryLimit()
+	err = controller.handler.MaintainHistoryLimit()
 	if err != nil {
 		log.Warnf("failed to maintain job history: %v", err)
 	}
@@ -128,7 +128,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Get job list")
-	jobs, err := controller.jobHandler.GetJobs()
+	jobs, err := controller.handler.GetJobs()
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -162,7 +162,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
 	log.Debugf("Get job %s", jobName)
-	job, err := controller.jobHandler.GetJob(jobName)
+	job, err := controller.handler.GetJob(jobName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -195,14 +195,14 @@ func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) 
 func (controller *jobController) DeleteJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
 	log.Debugf("Delete job %s", jobName)
-	err := controller.jobHandler.DeleteJob(jobName)
+	err := controller.handler.DeleteJob(jobName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
 	}
 
-	status := schedulerModels.Status{
-		Status:  schedulerModels.StatusSuccess,
+	status := apiModels.Status{
+		Status:  apiModels.StatusSuccess,
 		Code:    http.StatusOK,
 		Message: fmt.Sprintf("job %s successfully deleted", jobName),
 	}

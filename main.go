@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"os"
 
-	cj "github.com/equinor/radix-job-scheduler-server/api/controllers/job"
-	ch "github.com/equinor/radix-job-scheduler-server/api/handlers/job"
+	batchControllers "github.com/equinor/radix-job-scheduler-server/api/controllers/batches"
+	jobControllers "github.com/equinor/radix-job-scheduler-server/api/controllers/jobs"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/router"
 	_ "github.com/equinor/radix-job-scheduler-server/swaggerui"
-	schedulerModels "github.com/equinor/radix-job-scheduler/models"
+	batchApi "github.com/equinor/radix-job-scheduler/api/batches"
+	jobApi "github.com/equinor/radix-job-scheduler/api/jobs"
+	apiModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/kube"
 	"github.com/equinor/radix-operator/pkg/apis/utils"
 	log "github.com/sirupsen/logrus"
@@ -18,7 +20,7 @@ import (
 )
 
 func main() {
-	env := schedulerModels.NewEnv()
+	env := apiModels.NewEnv()
 	fs := initializeFlagSet()
 
 	var (
@@ -42,12 +44,13 @@ func main() {
 	}
 }
 
-func getControllers(env *schedulerModels.Env) []models.Controller {
+func getControllers(env *apiModels.Env) []models.Controller {
 	kubeClient, radixClient, _, secretProviderClient := utils.GetKubernetesClient()
 	kubeUtil, _ := kube.New(kubeClient, radixClient, secretProviderClient)
 
 	return []models.Controller{
-		cj.New(ch.New(env, kubeUtil, kubeClient, radixClient)),
+		jobControllers.New(jobApi.New(env, kubeUtil)),
+		batchControllers.New(batchApi.New(env, kubeUtil, kubeClient, radixClient)),
 	}
 }
 

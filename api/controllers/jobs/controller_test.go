@@ -1,4 +1,4 @@
-package job
+package jobs
 
 import (
 	"errors"
@@ -7,20 +7,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/equinor/radix-job-scheduler-server/api/controllers/testutils"
-	jobErrors "github.com/equinor/radix-job-scheduler-server/api/errors"
-	jobHandlers "github.com/equinor/radix-job-scheduler-server/api/handlers/job"
-	jobHandlersTest "github.com/equinor/radix-job-scheduler-server/api/handlers/job/test"
-	"github.com/equinor/radix-job-scheduler-server/api/utils"
+	"github.com/equinor/radix-common/utils"
+	"github.com/equinor/radix-job-scheduler-server/api/utils/test"
+	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
+	jobApi "github.com/equinor/radix-job-scheduler/api/jobs"
+	jobMock "github.com/equinor/radix-job-scheduler/api/jobs/mock"
 	"github.com/equinor/radix-job-scheduler/models"
 	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTest(jobHandler jobHandlers.Handler) *testutils.ControllerTestUtils {
-	jobController := jobController{jobHandler: jobHandler}
-	controllerTestUtils := testutils.New(&jobController)
+func setupTest(handler jobApi.JobHandler) *test.ControllerTestUtils {
+	jobController := jobController{handler: handler}
+	controllerTestUtils := test.New(&jobController)
 	return &controllerTestUtils
 }
 
@@ -29,7 +29,7 @@ func TestGetJobs(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobState := models.JobStatus{
 			Name:    "jobname",
 			Started: utils.FormatTimestamp(time.Now()),
@@ -50,7 +50,7 @@ func TestGetJobs(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
 			var returnedJobs []models.JobStatus
-			testutils.GetResponseBody(response, &returnedJobs)
+			test.GetResponseBody(response, &returnedJobs)
 			assert.Len(t, returnedJobs, 1)
 			assert.Equal(t, jobState.Name, returnedJobs[0].Name)
 			assert.Equal(t, jobState.Started, returnedJobs[0].Started)
@@ -63,7 +63,7 @@ func TestGetJobs(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJobs().
@@ -78,7 +78,7 @@ func TestGetJobs(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
@@ -92,7 +92,7 @@ func TestGetJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "jobname"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobState := models.JobStatus{
 			Name:    jobName,
 			Started: utils.FormatTimestamp(time.Now()),
@@ -113,7 +113,7 @@ func TestGetJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
 			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
+			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, jobState.Name, returnedJob.Name)
 			assert.Equal(t, jobState.Started, returnedJob.Started)
 			assert.Equal(t, jobState.Ended, returnedJob.Ended)
@@ -126,11 +126,11 @@ func TestGetJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName, kind := "anyjob", "job"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJob(gomock.Any()).
-			Return(nil, jobErrors.NewNotFound(kind, jobName)).
+			Return(nil, apiErrors.NewNotFound(kind, jobName)).
 			Times(1)
 
 		controllerTestUtils := setupTest(jobHandler)
@@ -141,11 +141,11 @@ func TestGetJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusNotFound, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.NotFoundMessage(kind, jobName), returnedStatus.Message)
+			assert.Equal(t, apiErrors.NotFoundMessage(kind, jobName), returnedStatus.Message)
 		}
 	})
 
@@ -153,7 +153,7 @@ func TestGetJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJob(gomock.Any()).
@@ -168,7 +168,7 @@ func TestGetJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
@@ -188,10 +188,10 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
+			CreateJob(&jobScheduleDescription, "").
 			Return(&createdJob, nil).
 			Times(1)
 		jobHandler.
@@ -207,7 +207,7 @@ func TestCreateJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
 			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
+			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, createdJob.Name, returnedJob.Name)
 			assert.Equal(t, createdJob.Started, returnedJob.Started)
 			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
@@ -244,10 +244,10 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
+			CreateJob(&jobScheduleDescription, "").
 			Return(&createdJob, nil).
 			Times(1)
 		jobHandler.
@@ -263,7 +263,7 @@ func TestCreateJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
 			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
+			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, createdJob.Name, returnedJob.Name)
 			assert.Equal(t, createdJob.Started, returnedJob.Started)
 			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
@@ -284,10 +284,10 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
+			CreateJob(&jobScheduleDescription, "").
 			Return(&createdJob, nil).
 			Times(1)
 		jobHandler.
@@ -303,7 +303,7 @@ func TestCreateJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
 			var returnedJob models.JobStatus
-			testutils.GetResponseBody(response, &returnedJob)
+			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, createdJob.Name, returnedJob.Name)
 			assert.Equal(t, createdJob.Started, returnedJob.Started)
 			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
@@ -316,10 +316,10 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(gomock.Any()).
+			CreateJob(gomock.Any(), gomock.Any()).
 			Times(0)
 		jobHandler.
 			EXPECT().
@@ -333,11 +333,11 @@ func TestCreateJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusUnprocessableEntity, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonInvalid, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.InvalidMessage("payload"), returnedStatus.Message)
+			assert.Equal(t, apiErrors.InvalidMessage("payload"), returnedStatus.Message)
 		}
 	})
 
@@ -346,12 +346,12 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		anyKind, anyName := "anyKind", "anyName"
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
-			Return(nil, jobErrors.NewNotFound(anyKind, anyName)).
+			CreateJob(&jobScheduleDescription, "").
+			Return(nil, apiErrors.NewNotFound(anyKind, anyName)).
 			Times(1)
 		jobHandler.
 			EXPECT().
@@ -365,11 +365,11 @@ func TestCreateJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusNotFound, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.NotFoundMessage(anyKind, anyName), returnedStatus.Message)
+			assert.Equal(t, apiErrors.NotFoundMessage(anyKind, anyName), returnedStatus.Message)
 		}
 	})
 
@@ -378,10 +378,10 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription).
+			CreateJob(&jobScheduleDescription, "").
 			Return(nil, errors.New("any error")).
 			Times(1)
 		jobHandler.
@@ -396,7 +396,7 @@ func TestCreateJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
@@ -410,7 +410,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -424,7 +424,7 @@ func TestDeleteJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusOK, returnedStatus.Code)
 			assert.Equal(t, models.StatusSuccess, returnedStatus.Status)
 			assert.Empty(t, returnedStatus.Reason)
@@ -436,11 +436,11 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
-			Return(jobErrors.NewNotFound("job", jobName)).
+			Return(apiErrors.NewNotFound("job", jobName)).
 			Times(1)
 		controllerTestUtils := setupTest(jobHandler)
 		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/jobs/%s", jobName))
@@ -450,11 +450,11 @@ func TestDeleteJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusNotFound, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, jobErrors.NotFoundMessage("job", jobName), returnedStatus.Message)
+			assert.Equal(t, apiErrors.NotFoundMessage("job", jobName), returnedStatus.Message)
 		}
 	})
 
@@ -463,7 +463,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobHandlersTest.NewMockHandler(ctrl)
+		jobHandler := jobMock.NewMockJob(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -477,7 +477,7 @@ func TestDeleteJob(t *testing.T) {
 		if response != nil {
 			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 			var returnedStatus models.Status
-			testutils.GetResponseBody(response, &returnedStatus)
+			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
