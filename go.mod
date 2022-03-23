@@ -4,8 +4,8 @@ go 1.17
 
 require (
 	github.com/equinor/radix-common v1.1.10
-	github.com/equinor/radix-job-scheduler v1.5.20
-	github.com/equinor/radix-operator v1.19.8
+	github.com/equinor/radix-job-scheduler v1.5.23
+	github.com/equinor/radix-operator v1.19.11
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rakyll/statik v0.1.6
@@ -57,9 +57,9 @@ require (
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
-	sigs.k8s.io/secrets-store-csi-driver v1.0.1 // indirect
+	sigs.k8s.io/secrets-store-csi-driver v1.1.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
-	sigs.k8s.io/yaml v1.2.0 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.23.4
