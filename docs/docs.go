@@ -1,4 +1,4 @@
-// Package docs classification adix job scheduler server.
+// Package docs Radix job scheduler server.
 //
 // This is the API Server for the Radix job scheduler server.
 //
@@ -15,4 +15,3 @@
 //
 // swagger:meta
 package docs
-
