@@ -29,7 +29,7 @@ func TestGetJobs(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobState := models.JobStatus{
 			Name:    "jobname",
 			Started: utils.FormatTimestamp(time.Now()),
@@ -63,7 +63,7 @@ func TestGetJobs(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJobs().
@@ -92,7 +92,7 @@ func TestGetJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "jobname"
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobState := models.JobStatus{
 			Name:    jobName,
 			Started: utils.FormatTimestamp(time.Now()),
@@ -126,7 +126,7 @@ func TestGetJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName, kind := "anyjob", "job"
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJob(gomock.Any()).
@@ -153,7 +153,7 @@ func TestGetJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJob(gomock.Any()).
@@ -188,7 +188,7 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription, "").
@@ -244,7 +244,7 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription, "").
@@ -284,7 +284,7 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription, "").
@@ -316,7 +316,7 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(gomock.Any(), gomock.Any()).
@@ -346,7 +346,7 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		anyKind, anyName := "anyKind", "anyName"
 		jobHandler.
 			EXPECT().
@@ -378,7 +378,7 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription, "").
@@ -410,7 +410,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -436,7 +436,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -463,7 +463,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobMock.NewMockJob(ctrl)
+		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
