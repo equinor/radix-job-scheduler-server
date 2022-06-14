@@ -29,7 +29,7 @@ func TestGetBatches(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchState := models.BatchStatus{
 			JobStatus: models.JobStatus{
 				Name:    "batchname",
@@ -65,7 +65,7 @@ func TestGetBatches(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			GetBatches().
@@ -94,7 +94,7 @@ func TestGetBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "batchname"
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchState := models.BatchStatus{
 			JobStatus: models.JobStatus{
 				Name:    batchName,
@@ -130,7 +130,7 @@ func TestGetBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName, kind := "anybatch", "batch"
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			GetBatch(gomock.Any()).
@@ -157,7 +157,7 @@ func TestGetBatch(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			GetBatch(gomock.Any()).
@@ -194,7 +194,7 @@ func TestCreateBatch(t *testing.T) {
 				Status:  "batchstatus",
 			},
 		}
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -256,7 +256,7 @@ func TestCreateBatch(t *testing.T) {
 				Status:  "batchstatus",
 			},
 		}
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -300,7 +300,7 @@ func TestCreateBatch(t *testing.T) {
 				Status:  "batchstatus",
 			},
 		}
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -332,7 +332,7 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(gomock.Any()).
@@ -362,7 +362,7 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchScheduleDescription := models.BatchScheduleDescription{}
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		anyKind, anyName := "anyKind", "anyName"
 		batchHandler.
 			EXPECT().
@@ -394,7 +394,7 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchScheduleDescription := models.BatchScheduleDescription{}
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -426,7 +426,7 @@ func TestDeleteBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "anybatch"
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
@@ -452,7 +452,7 @@ func TestDeleteBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "anybatch"
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
@@ -479,7 +479,7 @@ func TestDeleteBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "anybatch"
-		batchHandler := batchMock.NewMockBatch(ctrl)
+		batchHandler := batchMock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
