@@ -44,6 +44,7 @@ We follow the [semantic version](https://semver.org/) as recommended by [go](htt
     git tag v1.0.0
     git push origin v1.0.0
     ```
+* If generated file `swagger.json` is changed (methods or structures) - copy it to the [public site](https://github.com/equinor/radix-public-site/tree/main/public-site/docs/src/guides/configure-jobs) 
 
 ### Custom configuration
 
