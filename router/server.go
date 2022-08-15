@@ -1,13 +1,14 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/utils"
 	schedulerModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
-	"github.com/urfave/negroni"
-	"net/http"
+	"github.com/urfave/negroni/v2"
 )
 
 const apiVersionRoute = "/api/v1"
