@@ -19,13 +19,6 @@ Also needed:
 
 Clone the repo into your `GOPATH` and run `go mod download`.
 
-### Generating mocks
-We use gomock to generate mocks used in unit test. [https://github.com/golang/mock](https://github.com/golang/mock)
-
-You need to regenerate mocks if you make changes to any of the interfaces in the code, e.g. the job Handler interface
-
-Run `make generate-mock` to regenerate mocks
-
 #### Update version
 We follow the [semantic version](https://semver.org/) as recommended by [go](https://blog.golang.org/publishing-go-modules).
 `radix-job-scheduler-server` has three places to set version
@@ -37,13 +30,6 @@ We follow the [semantic version](https://semver.org/) as recommended by [go](htt
     make swagger
     ``` 
 
-* `tag` in git repository (in `main` branch) - matching to the version of `Version` in `docs/docs.go`
-
-  Run following command to set `tag` (with corresponding version)
-    ```
-    git tag v1.0.0
-    git push origin v1.0.0
-    ```
 * If generated file `swagger.json` is changed (methods or structures) - copy it to the [public site](https://github.com/equinor/radix-public-site/tree/main/public-site/docs/src/guides/configure-jobs) 
 
 ### Custom configuration
