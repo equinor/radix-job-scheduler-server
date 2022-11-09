@@ -3,9 +3,9 @@ module github.com/equinor/radix-job-scheduler-server
 go 1.18
 
 require (
-	github.com/equinor/radix-common v1.2.1
-	github.com/equinor/radix-job-scheduler v1.6.3
-	github.com/equinor/radix-operator v1.25.4
+	github.com/equinor/radix-common v1.2.3
+	github.com/equinor/radix-job-scheduler v1.6.4
+	github.com/equinor/radix-operator v1.29.1
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rakyll/statik v0.1.7
