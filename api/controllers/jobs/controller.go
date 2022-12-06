@@ -3,7 +3,7 @@ package jobs
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/equinor/radix-job-scheduler-server/api/controllers"
@@ -91,7 +91,7 @@ func (controller *jobController) GetRoutes() models.Routes {
 func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Request) {
 	var jobScheduleDescription apiModels.JobScheduleDescription
 
-	if body, _ := ioutil.ReadAll(r.Body); len(body) > 0 {
+	if body, _ := io.ReadAll(r.Body); len(body) > 0 {
 		if err := json.Unmarshal(body, &jobScheduleDescription); err != nil {
 			controller.HandleError(w, apiErrors.NewInvalid("payload"))
 			return
