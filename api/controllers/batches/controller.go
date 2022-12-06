@@ -3,7 +3,7 @@ package batch
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/equinor/radix-job-scheduler-server/api/controllers"
@@ -91,7 +91,7 @@ func (controller *batchController) GetRoutes() models.Routes {
 func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Request) {
 	var batchScheduleDescription schedulerModels.BatchScheduleDescription
 
-	if body, _ := ioutil.ReadAll(r.Body); len(body) > 0 {
+	if body, _ := io.ReadAll(r.Body); len(body) > 0 {
 		if err := json.Unmarshal(body, &batchScheduleDescription); err != nil {
 			controller.HandleError(w, apiErrors.NewInvalid("BatchScheduleDescription"))
 			return
