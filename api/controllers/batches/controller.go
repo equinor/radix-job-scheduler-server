@@ -9,7 +9,7 @@ import (
 	"github.com/equinor/radix-job-scheduler-server/api/controllers"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/utils"
-	api "github.com/equinor/radix-job-scheduler/api/batches"
+	"github.com/equinor/radix-job-scheduler/api"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
 	schedulerModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/gorilla/mux"
@@ -20,11 +20,11 @@ const batchNameParam = "batchName"
 
 type batchController struct {
 	*controllers.ControllerBase
-	handler api.BatchHandler
+	handler api.Handler
 }
 
 // New create a new batch controller
-func New(handler api.BatchHandler) models.Controller {
+func New(handler api.Handler) models.Controller {
 	return &batchController{
 		handler: handler,
 	}
@@ -46,7 +46,7 @@ func (controller *batchController) GetRoutes() models.Routes {
 		models.Route{
 			Path:        fmt.Sprintf("/batches/{%s}", batchNameParam),
 			Method:      http.MethodGet,
-			HandlerFunc: controller.GetBatch,
+			HandlerFunc: controller.GetBatchStatus,
 		},
 		models.Route{
 			Path:        fmt.Sprintf("/batches/{%s}", batchNameParam),
@@ -98,7 +98,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	batchState, err := controller.handler.CreateBatch(&batchScheduleDescription)
+	batchState, err := controller.handler.CreateRadixBatch(&batchScheduleDescription)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -128,7 +128,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 //        "$ref": "#/definitions/Status"
 func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Get batch list")
-	batches, err := controller.handler.GetBatches()
+	batches, err := controller.handler.GetRadixBatchStatuses()
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -159,10 +159,10 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 //     description: "Internal server error"
 //     schema:
 //        "$ref": "#/definitions/Status"
-func (controller *batchController) GetBatch(w http.ResponseWriter, r *http.Request) {
+func (controller *batchController) GetBatchStatus(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
 	log.Debugf("Get batch %s", batchName)
-	batch, err := controller.handler.GetBatch(batchName)
+	batch, err := controller.handler.GetRadixBatchStatus(batchName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -195,7 +195,7 @@ func (controller *batchController) GetBatch(w http.ResponseWriter, r *http.Reque
 func (controller *batchController) DeleteBatch(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
 	log.Debugf("Delete batch %s", batchName)
-	err := controller.handler.DeleteBatch(batchName)
+	err := controller.handler.DeleteRadixBatch(batchName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return

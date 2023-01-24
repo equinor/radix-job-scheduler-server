@@ -9,8 +9,8 @@ import (
 	"github.com/equinor/radix-job-scheduler-server/api/controllers"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/utils"
+	"github.com/equinor/radix-job-scheduler/api"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
-	api "github.com/equinor/radix-job-scheduler/api/jobs"
 	apiModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -20,11 +20,11 @@ const jobNameParam = "jobName"
 
 type jobController struct {
 	*controllers.ControllerBase
-	handler api.JobHandler
+	handler api.Handler
 }
 
 // New create a new job controller
-func New(handler api.JobHandler) models.Controller {
+func New(handler api.Handler) models.Controller {
 	return &jobController{
 		handler: handler,
 	}
@@ -98,7 +98,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	jobState, err := controller.handler.CreateJob(&jobScheduleDescription, "")
+	jobState, err := controller.handler.CreateRadixBatchSingleJob(&jobScheduleDescription)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -128,7 +128,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Get job list")
-	jobs, err := controller.handler.GetJobs()
+	jobs, err := controller.handler.GetRadixBatchSingleJobStatuses()
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -162,7 +162,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
 	log.Debugf("Get job %s", jobName)
-	job, err := controller.handler.GetJob(jobName)
+	job, err := controller.handler.GetRadixBatchSingleJobStatus(jobName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -195,7 +195,7 @@ func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) 
 func (controller *jobController) DeleteJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
 	log.Debugf("Delete job %s", jobName)
-	err := controller.handler.DeleteJob(jobName)
+	err := controller.handler.DeleteRadixBatch(jobName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
