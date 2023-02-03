@@ -15,6 +15,7 @@ import (
 	apiModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/kube"
 	"github.com/equinor/radix-operator/pkg/apis/utils"
+	"github.com/gorilla/handlers"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
@@ -34,7 +35,7 @@ func main() {
 
 	go func() {
 		log.Infof("Radix job scheduler API is serving on port %s", *port)
-		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), router.NewServer(env, getControllers(env)...))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, getControllers(env)...)))
 		errs <- err
 	}()
 
