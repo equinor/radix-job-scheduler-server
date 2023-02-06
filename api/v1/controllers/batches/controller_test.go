@@ -9,10 +9,11 @@ import (
 
 	commonUtils "github.com/equinor/radix-common/utils"
 	"github.com/equinor/radix-job-scheduler-server/api/utils/test"
-	batchApi "github.com/equinor/radix-job-scheduler/api/batches"
-	batchMock "github.com/equinor/radix-job-scheduler/api/batches/mock"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
+	batchApi "github.com/equinor/radix-job-scheduler/api/v1/batches"
+	batchMock "github.com/equinor/radix-job-scheduler/api/v1/batches/mock"
 	"github.com/equinor/radix-job-scheduler/models"
+	modelsV1 "github.com/equinor/radix-job-scheduler/models/v1"
 	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -30,8 +31,8 @@ func TestGetBatches(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchHandler := batchMock.NewMockBatchHandler(ctrl)
-		batchState := models.BatchStatus{
-			JobStatus: models.JobStatus{
+		batchState := modelsV1.BatchStatus{
+			JobStatus: modelsV1.JobStatus{
 				Name:    "batchname",
 				Started: commonUtils.FormatTimestamp(time.Now()),
 				Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
@@ -41,7 +42,7 @@ func TestGetBatches(t *testing.T) {
 		batchHandler.
 			EXPECT().
 			GetBatches().
-			Return([]models.BatchStatus{batchState}, nil).
+			Return([]modelsV1.BatchStatus{batchState}, nil).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
@@ -51,7 +52,7 @@ func TestGetBatches(t *testing.T) {
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatches []models.BatchStatus
+			var returnedBatches []modelsV1.BatchStatus
 			test.GetResponseBody(response, &returnedBatches)
 			assert.Len(t, returnedBatches, 1)
 			assert.Equal(t, batchState.JobStatus.Name, returnedBatches[0].Name)
@@ -95,8 +96,8 @@ func TestGetBatch(t *testing.T) {
 		defer ctrl.Finish()
 		batchName := "batchname"
 		batchHandler := batchMock.NewMockBatchHandler(ctrl)
-		batchState := models.BatchStatus{
-			JobStatus: models.JobStatus{
+		batchState := modelsV1.BatchStatus{
+			JobStatus: modelsV1.JobStatus{
 				Name:    batchName,
 				Started: commonUtils.FormatTimestamp(time.Now()),
 				Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
@@ -116,7 +117,7 @@ func TestGetBatch(t *testing.T) {
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatch models.BatchStatus
+			var returnedBatch modelsV1.BatchStatus
 			test.GetResponseBody(response, &returnedBatch)
 			assert.Equal(t, batchState.Name, returnedBatch.Name)
 			assert.Equal(t, batchState.Started, returnedBatch.Started)
@@ -186,8 +187,8 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchScheduleDescription := models.BatchScheduleDescription{}
-		createdBatch := models.BatchStatus{
-			JobStatus: models.JobStatus{
+		createdBatch := modelsV1.BatchStatus{
+			JobStatus: modelsV1.JobStatus{
 				Name:    "newbatch",
 				Started: commonUtils.FormatTimestamp(time.Now()),
 				Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
@@ -212,7 +213,7 @@ func TestCreateBatch(t *testing.T) {
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatch models.BatchStatus
+			var returnedBatch modelsV1.BatchStatus
 			test.GetResponseBody(response, &returnedBatch)
 			assert.Equal(t, createdBatch.Name, returnedBatch.Name)
 			assert.Equal(t, createdBatch.Started, returnedBatch.Started)
@@ -248,8 +249,8 @@ func TestCreateBatch(t *testing.T) {
 				},
 			},
 		}
-		createdBatch := models.BatchStatus{
-			JobStatus: models.JobStatus{
+		createdBatch := modelsV1.BatchStatus{
+			JobStatus: modelsV1.JobStatus{
 				Name:    "newbatch",
 				Started: commonUtils.FormatTimestamp(time.Now()),
 				Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
@@ -274,7 +275,7 @@ func TestCreateBatch(t *testing.T) {
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatch models.BatchStatus
+			var returnedBatch modelsV1.BatchStatus
 			test.GetResponseBody(response, &returnedBatch)
 			assert.Equal(t, createdBatch.Name, returnedBatch.Name)
 			assert.Equal(t, createdBatch.Started, returnedBatch.Started)
@@ -292,8 +293,8 @@ func TestCreateBatch(t *testing.T) {
 				{Payload: "a_payload"},
 			},
 		}
-		createdBatch := models.BatchStatus{
-			JobStatus: models.JobStatus{
+		createdBatch := modelsV1.BatchStatus{
+			JobStatus: modelsV1.JobStatus{
 				Name:    "newbatch",
 				Started: commonUtils.FormatTimestamp(time.Now()),
 				Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
@@ -318,7 +319,7 @@ func TestCreateBatch(t *testing.T) {
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatch models.BatchStatus
+			var returnedBatch modelsV1.BatchStatus
 			test.GetResponseBody(response, &returnedBatch)
 			assert.Equal(t, createdBatch.Name, returnedBatch.Name)
 			assert.Equal(t, createdBatch.Started, returnedBatch.Started)

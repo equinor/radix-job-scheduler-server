@@ -9,8 +9,8 @@ import (
 	"github.com/equinor/radix-job-scheduler-server/api/controllers"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/utils"
-	"github.com/equinor/radix-job-scheduler/api"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
+	radixBatchApi "github.com/equinor/radix-job-scheduler/api/v2"
 	schedulerModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -20,11 +20,11 @@ const batchNameParam = "batchName"
 
 type batchController struct {
 	*controllers.ControllerBase
-	handler api.Handler
+	handler radixBatchApi.Handler
 }
 
 // New create a new batch controller
-func New(handler api.Handler) models.Controller {
+func New(handler radixBatchApi.Handler) models.Controller {
 	return &batchController{
 		handler: handler,
 	}
@@ -128,7 +128,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 //        "$ref": "#/definitions/Status"
 func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Get batch list")
-	batches, err := controller.handler.GetRadixBatchStatuses()
+	batches, err := controller.handler.GetRadixBatches()
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -162,7 +162,7 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 func (controller *batchController) GetBatchStatus(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
 	log.Debugf("Get batch %s", batchName)
-	batch, err := controller.handler.GetRadixBatchStatus(batchName)
+	batch, err := controller.handler.GetRadixBatch(batchName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
