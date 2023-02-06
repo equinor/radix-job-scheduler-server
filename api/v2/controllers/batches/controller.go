@@ -121,7 +121,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 //     schema:
 //        type: "array"
 //        items:
-//           "$ref": "#/definitions/BatchStatus"
+//           "$ref": "#/definitions/RadixBatch"
 //   "500":
 //     description: "Internal server error"
 //     schema:
@@ -150,7 +150,7 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 //   "200":
 //     description: "Successful get batch"
 //     schema:
-//        "$ref": "#/definitions/BatchStatus"
+//        "$ref": "#/definitions/RadixBatch"
 //   "404":
 //     description: "Not found"
 //     schema:
@@ -162,7 +162,7 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 func (controller *batchController) GetBatchStatus(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
 	log.Debugf("Get batch %s", batchName)
-	batch, err := controller.handler.GetRadixBatch(batchName)
+	batch, err := controller.handler.GetRadixBatchStatus(batchName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return

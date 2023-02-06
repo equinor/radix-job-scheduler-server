@@ -71,7 +71,7 @@ func (controller *jobController) GetRoutes() models.Routes {
 //   "200":
 //     description: "Successful create job"
 //     schema:
-//        "$ref": "#/definitions/JobStatus"
+//        "$ref": "#/definitions/BatchStatus"
 //   "400":
 //     description: "Bad request"
 //     schema:
@@ -121,7 +121,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 //     schema:
 //        type: "array"
 //        items:
-//           "$ref": "#/definitions/JobStatus"
+//           "$ref": "#/definitions/RadixBatch"
 //   "500":
 //     description: "Internal server error"
 //     schema:
@@ -150,7 +150,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 //   "200":
 //     description: "Successful get job"
 //     schema:
-//        "$ref": "#/definitions/JobStatus"
+//        "$ref": "#/definitions/RadixBatch"
 //   "404":
 //     description: "Not found"
 //     schema:
@@ -162,7 +162,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
 	log.Debugf("Get job %s", jobName)
-	job, err := controller.handler.GetRadixBatch(jobName)
+	job, err := controller.handler.GetRadixBatchStatus(jobName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
