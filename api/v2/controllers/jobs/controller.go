@@ -34,22 +34,22 @@ func New(handler api.Handler) models.Controller {
 func (controller *jobController) GetRoutes() models.Routes {
 	routes := models.Routes{
 		models.Route{
-			Path:        "/jobs",
+			Path:        "/v2/jobs",
 			Method:      http.MethodPost,
 			HandlerFunc: controller.CreateJob,
 		},
 		models.Route{
-			Path:        "/jobs",
+			Path:        "/v2/jobs",
 			Method:      http.MethodGet,
 			HandlerFunc: controller.GetJobs,
 		},
 		models.Route{
-			Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
+			Path:        fmt.Sprintf("/v2/jobs/{%s}", jobNameParam),
 			Method:      http.MethodGet,
 			HandlerFunc: controller.GetJob,
 		},
 		models.Route{
-			Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
+			Path:        fmt.Sprintf("/v2/jobs/{%s}", jobNameParam),
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteJob,
 		},
@@ -71,7 +71,7 @@ func (controller *jobController) GetRoutes() models.Routes {
 //   "200":
 //     description: "Successful create job"
 //     schema:
-//        "$ref": "#/definitions/BatchStatus"
+//        "$ref": "#/definitions/JobStatus"
 //   "400":
 //     description: "Bad request"
 //     schema:
@@ -121,7 +121,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 //     schema:
 //        type: "array"
 //        items:
-//           "$ref": "#/definitions/RadixBatch"
+//           "$ref": "#/definitions/JobStatus"
 //   "500":
 //     description: "Internal server error"
 //     schema:

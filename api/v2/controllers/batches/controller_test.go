@@ -1,27 +1,24 @@
 package batch
 
-/*
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
 	commonUtils "github.com/equinor/radix-common/utils"
 	"github.com/equinor/radix-job-scheduler-server/api/utils/test"
-	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
 	radixBatchApi "github.com/equinor/radix-job-scheduler/api/v2"
 	batchMock "github.com/equinor/radix-job-scheduler/api/v2/mock"
 	models "github.com/equinor/radix-job-scheduler/models/v2"
-	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
+	radixv1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func setupTest(handler radixBatchApi.Handler) *test.ControllerTestUtils {
 	controller := batchController{handler: handler}
-	controllerTestUtils := test.New(&controller)
+	controllerTestUtils := test.NewV2(&controller)
 	return &controllerTestUtils
 }
 
@@ -31,75 +28,75 @@ func TestGetBatches(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchHandler := batchMock.NewMockHandler(ctrl)
-		batchState := models.RadixBatchStatus{
-			Status: models.RadixBatchStatus{
-				CreationTime: commonUtils.FormatTimestamp(time.Now()),
-				Name:         "batchname",
-
-				//Started: commonUtils.FormatTimestamp(time.Now()),
-				//Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-				Status:  v1.RadixBatchStatus{
-					Condition:   v1.RadixBatchCondition{
-						Type:           "",
-						Reason:         "",
-						Message:        "",
-						ActiveTime:     nil,
-						CompletionTime: nil,
-					},
+		now := time.Now()
+		activeTime := metav1.NewTime(now.Add(time.Hour))
+		completionTime := metav1.NewTime(now.Add(time.Hour * 2))
+		batchState := models.RadixBatch{
+			CreationTime: commonUtils.FormatTimestamp(now),
+			Name:         "some-batch-name",
+			Status: radixv1.RadixBatchStatus{
+				Condition: radixv1.RadixBatchCondition{
+					Type:           radixv1.BatchConditionTypeCompleted,
+					Reason:         string(radixv1.BatchJobPhaseSucceeded),
+					Message:        "test message",
+					ActiveTime:     &activeTime,
+					CompletionTime: &completionTime,
 				},
 			},
 		}
 		batchHandler.
 			EXPECT().
-			GetBatches().
-			Return([]models.RadixBatchStatus{batchState}, nil).
+			GetRadixBatches().
+			Return([]models.RadixBatch{batchState}, nil).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batches")
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v2/batches")
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatches []models.BatchStatus
+			var returnedBatches []models.RadixBatch
 			test.GetResponseBody(response, &returnedBatches)
 			assert.Len(t, returnedBatches, 1)
-			assert.Equal(t, batchState.JobStatus.Name, returnedBatches[0].Name)
-			assert.Equal(t, batchState.JobStatus.Started, returnedBatches[0].Started)
-			assert.Equal(t, batchState.JobStatus.Ended, returnedBatches[0].Ended)
-			assert.Equal(t, batchState.JobStatus.Status, returnedBatches[0].Status)
+			assert.Equal(t, batchState.Name, returnedBatches[0].Name)
+			assert.Equal(t, batchState.CreationTime, returnedBatches[0].CreationTime)
+			assert.Equal(t, commonUtils.FormatTime(batchState.Status.Condition.ActiveTime), commonUtils.FormatTime(returnedBatches[0].Status.Condition.ActiveTime))
+			assert.Equal(t, commonUtils.FormatTime(batchState.Status.Condition.CompletionTime), commonUtils.FormatTime(returnedBatches[0].Status.Condition.CompletionTime))
+			assert.Equal(t, batchState.Status.Condition.Message, returnedBatches[0].Status.Condition.Message)
 		}
 	})
+	/*
+		t.Run("Get batches - status code 500", func(t *testing.T) {
+			t.Parallel()
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			batchHandler := batchMock.NewMockBatchHandler(ctrl)
+			batchHandler.
+				EXPECT().
+				GetBatches().
+				Return(nil, errors.NewV2("unhandled error")).
+				Times(1)
 
-	t.Run("Get batches - status code 500", func(t *testing.T) {
-		t.Parallel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
-		batchHandler.
-			EXPECT().
-			GetBatches().
-			Return(nil, errors.New("unhandled error")).
-			Times(1)
+			controllerTestUtils := setupTest(batchHandler)
+			responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batches")
+			response := <-responseChannel
+			assert.NotNil(t, response)
 
-		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, "api/v1/batches")
-		response := <-responseChannel
-		assert.NotNil(t, response)
-
-		if response != nil {
-			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
-			var returnedStatus models.Status
-			test.GetResponseBody(response, &returnedStatus)
-			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
-			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
-			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
-		}
-	})
+			if response != nil {
+				assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+				var returnedStatus models.Status
+				test.GetResponseBody(response, &returnedStatus)
+				assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
+				assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+				assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
+			}
+		})
+	*/
 }
 
-func TestGetBatch(t *testing.T) {
+/*func TestGetBatch(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
@@ -172,7 +169,7 @@ func TestGetBatch(t *testing.T) {
 		batchHandler.
 			EXPECT().
 			GetBatch(gomock.Any()).
-			Return(nil, errors.New("unhandled error")).
+			Return(nil, errors.NewV2("unhandled error")).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
@@ -320,7 +317,7 @@ func TestCreateBatch(t *testing.T) {
 		batchHandler.
 			EXPECT().
 			MaintainHistoryLimit().
-			Return(errors.New("an error")).
+			Return(errors.NewV2("an error")).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
 		responseChannel := controllerTestUtils.ExecuteRequestWithBody(http.MethodPost, "/api/v1/batches", batchScheduleDescription)
@@ -409,7 +406,7 @@ func TestCreateBatch(t *testing.T) {
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
-			Return(nil, errors.New("any error")).
+			Return(nil, errors.NewV2("any error")).
 			Times(1)
 		batchHandler.
 			EXPECT().
@@ -494,7 +491,7 @@ func TestDeleteBatch(t *testing.T) {
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
-			Return(errors.New("any error")).
+			Return(errors.NewV2("any error")).
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
 		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batches/%s", batchName))

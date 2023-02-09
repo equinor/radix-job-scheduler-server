@@ -34,22 +34,22 @@ func New(handler jobApi.JobHandler) models.Controller {
 func (controller *jobController) GetRoutes() models.Routes {
 	routes := models.Routes{
 		models.Route{
-			Path:        "/jobs",
+			Path:        "/v1/jobs",
 			Method:      http.MethodPost,
 			HandlerFunc: controller.CreateJob,
 		},
 		models.Route{
-			Path:        "/jobs",
+			Path:        "/v1/jobs",
 			Method:      http.MethodGet,
 			HandlerFunc: controller.GetJobs,
 		},
 		models.Route{
-			Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
+			Path:        fmt.Sprintf("/v1/jobs/{%s}", jobNameParam),
 			Method:      http.MethodGet,
 			HandlerFunc: controller.GetJob,
 		},
 		models.Route{
-			Path:        fmt.Sprintf("/jobs/{%s}", jobNameParam),
+			Path:        fmt.Sprintf("/v1/jobs/{%s}", jobNameParam),
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteJob,
 		},
@@ -57,7 +57,7 @@ func (controller *jobController) GetRoutes() models.Routes {
 	return routes
 }
 
-// swagger:operation POST /jobs Job createJob
+// swagger:operation POST /v1/jobs Job createJob
 // ---
 // summary: Create job
 // parameters:
@@ -111,7 +111,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 	utils.JSONResponse(w, &jobState)
 }
 
-// swagger:operation GET /jobs/ Job getJobs
+// swagger:operation GET /v1/jobs/ Job getJobs
 // ---
 // summary: Gets jobs
 // parameters:
@@ -137,7 +137,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 	utils.JSONResponse(w, jobs)
 }
 
-// swagger:operation GET /jobs/{jobName} Job getJob
+// swagger:operation GET /v1/jobs/{jobName} Job getJob
 // ---
 // summary: Gets job
 // parameters:
@@ -170,7 +170,7 @@ func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) 
 	utils.JSONResponse(w, job)
 }
 
-// swagger:operation DELETE /jobs/{jobName} Job deleteJob
+// swagger:operation DELETE /v1/jobs/{jobName} Job deleteJob
 // ---
 // summary: Delete job
 // parameters:

@@ -14,12 +14,19 @@ import (
 )
 
 type ControllerTestUtils struct {
-	controllers []models.Controller
+	controllersV1 []models.Controller
+	controllersV2 []models.Controller
 }
 
-func New(controllers ...models.Controller) ControllerTestUtils {
+func NewV1(controllers ...models.Controller) ControllerTestUtils {
 	return ControllerTestUtils{
-		controllers: controllers,
+		controllersV1: controllers,
+	}
+}
+
+func NewV2(controllers ...models.Controller) ControllerTestUtils {
+	return ControllerTestUtils{
+		controllersV2: controllers,
 	}
 }
 
@@ -40,7 +47,7 @@ func (ctrl *ControllerTestUtils) ExecuteRequestWithBody(method, path string, bod
 			reader = bytes.NewReader(payload)
 		}
 
-		router := router.NewServer(schedulerModels.NewEnv(), ctrl.controllers...)
+		router := router.NewServer(schedulerModels.NewEnv(), ctrl.controllersV1, ctrl.controllersV2)
 		server := httptest.NewServer(router)
 		defer server.Close()
 		url := buildURLFromServer(server, path)

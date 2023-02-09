@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/equinor/radix-job-scheduler-server/models"
@@ -17,20 +18,24 @@ const (
 )
 
 // NewServer creates a new Radix job scheduler REST service
-func NewServer(env *schedulerModels.Env, controllers ...models.Controller) http.Handler {
-	router := mux.NewRouter().StrictSlash(true)
+func NewServer(env *schedulerModels.Env, apiV1Controllers []models.Controller, apiV2Controllers []models.Controller) http.Handler {
+	routerV1 := mux.NewRouter().StrictSlash(true)
+	routerV2 := mux.NewRouter().StrictSlash(true)
 
 	if env.UseSwagger {
-		initSwagger(router)
+		initSwagger(routerV1, "")
+		initSwagger(routerV1, "v2/")
 	}
 
-	initializeAPIServer(router, controllers)
+	initializeAPIServer(routerV1, apiVersionRouteV1, apiV1Controllers)
+	initializeAPIServer(routerV2, apiVersionRouteV2, apiV2Controllers)
 
 	serveMux := http.NewServeMux()
-	serveMux.Handle(apiVersionRouteV1+"/", router)
+	serveMux.Handle(apiVersionRouteV1+"/", routerV1)
+	serveMux.Handle(apiVersionRouteV2+"/", routerV2)
 
 	if env.UseSwagger {
-		serveMux.Handle("/swaggerui/", negroni.New(negroni.Wrap(router)))
+		serveMux.Handle("/swaggerui/", negroni.New(negroni.Wrap(routerV1), negroni.Wrap(routerV2)))
 	}
 
 	recovery := negroni.NewRecovery()
@@ -41,27 +46,28 @@ func NewServer(env *schedulerModels.Env, controllers ...models.Controller) http.
 	return n
 }
 
-func initSwagger(router *mux.Router) {
+func initSwagger(router *mux.Router, apiVersion string) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)
 	}
 
 	staticServer := http.FileServer(statikFS)
-	sh := http.StripPrefix("/swaggerui/", staticServer)
-	router.PathPrefix("/swaggerui/").Handler(sh)
+	prefix := fmt.Sprintf("/swaggerui/%s", apiVersion)
+	sh := http.StripPrefix(prefix, staticServer)
+	router.PathPrefix(prefix).Handler(sh)
 }
 
-func initializeAPIServer(router *mux.Router, controllers []models.Controller) {
+func initializeAPIServer(router *mux.Router, apiVersionRoute string, controllers []models.Controller) {
 	for _, controller := range controllers {
 		for _, route := range controller.GetRoutes() {
-			addHandlerRoute(router, route)
+			addHandlerRoute(router, apiVersionRoute, route)
 		}
 	}
 }
 
-func addHandlerRoute(router *mux.Router, route models.Route) {
-	path := apiVersionRouteV1 + route.Path
+func addHandlerRoute(router *mux.Router, apiVersionRoute string, route models.Route) {
+	path := apiVersionRoute + route.Path
 	router.HandleFunc(path,
 		utils.NewRadixMiddleware(path, route.Method, route.HandlerFunc).Handle).Methods(route.Method)
 }

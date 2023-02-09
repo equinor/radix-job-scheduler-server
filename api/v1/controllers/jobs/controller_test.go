@@ -21,7 +21,7 @@ import (
 
 func setupTest(handler jobApi.JobHandler) *test.ControllerTestUtils {
 	jobController := jobController{handler: handler}
-	controllerTestUtils := test.New(&jobController)
+	controllerTestUtils := test.NewV1(&jobController)
 	return &controllerTestUtils
 }
 

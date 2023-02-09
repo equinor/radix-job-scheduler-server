@@ -21,7 +21,7 @@ import (
 
 func setupTest(handler batchApi.BatchHandler) *test.ControllerTestUtils {
 	controller := batchController{handler: handler}
-	controllerTestUtils := test.New(&controller)
+	controllerTestUtils := test.NewV1(&controller)
 	return &controllerTestUtils
 }
 

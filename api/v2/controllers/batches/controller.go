@@ -34,22 +34,22 @@ func New(handler radixBatchApi.Handler) models.Controller {
 func (controller *batchController) GetRoutes() models.Routes {
 	routes := models.Routes{
 		models.Route{
-			Path:        "/batches",
+			Path:        "/v2/batches",
 			Method:      http.MethodPost,
 			HandlerFunc: controller.CreateBatch,
 		},
 		models.Route{
-			Path:        "/batches",
+			Path:        "/v2/batches",
 			Method:      http.MethodGet,
 			HandlerFunc: controller.GetBatches,
 		},
 		models.Route{
-			Path:        fmt.Sprintf("/batches/{%s}", batchNameParam),
+			Path:        fmt.Sprintf("/v2/batches/{%s}", batchNameParam),
 			Method:      http.MethodGet,
 			HandlerFunc: controller.GetBatchStatus,
 		},
 		models.Route{
-			Path:        fmt.Sprintf("/batches/{%s}", batchNameParam),
+			Path:        fmt.Sprintf("/v2/batches/{%s}", batchNameParam),
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteBatch,
 		},
@@ -57,7 +57,7 @@ func (controller *batchController) GetRoutes() models.Routes {
 	return routes
 }
 
-// swagger:operation POST /batches Batch createBatch
+// swagger:operation POST /v2/batches Batch createBatch
 // ---
 // summary: Create batch
 // parameters:
@@ -71,7 +71,7 @@ func (controller *batchController) GetRoutes() models.Routes {
 //   "200":
 //     description: "Successful create batch"
 //     schema:
-//        "$ref": "#/definitions/BatchStatus"
+//        "$ref": "#/definitions/RadixBatch"
 //   "400":
 //     description: "Bad request"
 //     schema:
@@ -111,7 +111,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 	utils.JSONResponse(w, &batchState)
 }
 
-// swagger:operation GET /batches/ Batch getBatches
+// swagger:operation GET /v2/batches/ Batch getBatches
 // ---
 // summary: Gets batches
 // parameters:
@@ -137,7 +137,7 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 	utils.JSONResponse(w, batches)
 }
 
-// swagger:operation GET /batches/{batchName} Batch getBatch
+// swagger:operation GET /v2/batches/{batchName} Batch getBatch
 // ---
 // summary: Gets batch
 // parameters:
@@ -170,7 +170,7 @@ func (controller *batchController) GetBatchStatus(w http.ResponseWriter, r *http
 	utils.JSONResponse(w, batch)
 }
 
-// swagger:operation DELETE /batches/{batchName} Batch deleteBatch
+// swagger:operation DELETE /v2/batches/{batchName} Batch deleteBatch
 // ---
 // summary: Delete batch
 // parameters:
