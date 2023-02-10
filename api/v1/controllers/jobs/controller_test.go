@@ -192,7 +192,7 @@ func TestCreateJob(t *testing.T) {
 		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription, "").
+			CreateJob(&jobScheduleDescription).
 			Return(&createdJob, nil).
 			Times(1)
 		jobHandler.
@@ -248,7 +248,7 @@ func TestCreateJob(t *testing.T) {
 		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription, "").
+			CreateJob(&jobScheduleDescription).
 			Return(&createdJob, nil).
 			Times(1)
 		jobHandler.
@@ -288,7 +288,7 @@ func TestCreateJob(t *testing.T) {
 		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription, "").
+			CreateJob(&jobScheduleDescription).
 			Return(&createdJob, nil).
 			Times(1)
 		jobHandler.
@@ -320,7 +320,7 @@ func TestCreateJob(t *testing.T) {
 		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(gomock.Any(), gomock.Any()).
+			CreateJob(gomock.Any()).
 			Times(0)
 		jobHandler.
 			EXPECT().
@@ -351,7 +351,7 @@ func TestCreateJob(t *testing.T) {
 		anyKind, anyName := "anyKind", "anyName"
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription, "").
+			CreateJob(&jobScheduleDescription).
 			Return(nil, apiErrors.NewNotFound(anyKind, anyName)).
 			Times(1)
 		jobHandler.
@@ -382,7 +382,7 @@ func TestCreateJob(t *testing.T) {
 		jobHandler := jobMock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
-			CreateJob(&jobScheduleDescription, "").
+			CreateJob(&jobScheduleDescription).
 			Return(nil, errors.New("any error")).
 			Times(1)
 		jobHandler.

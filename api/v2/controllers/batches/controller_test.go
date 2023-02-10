@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"github.com/equinor/radix-common/utils/pointers"
 	"net/http"
 	"testing"
 	"time"
@@ -10,7 +11,6 @@ import (
 	radixBatchApi "github.com/equinor/radix-job-scheduler/api/v2"
 	batchMock "github.com/equinor/radix-job-scheduler/api/v2/mock"
 	models "github.com/equinor/radix-job-scheduler/models/v2"
-	radixv1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,25 +29,38 @@ func TestGetBatches(t *testing.T) {
 		defer ctrl.Finish()
 		batchHandler := batchMock.NewMockHandler(ctrl)
 		now := time.Now()
-		activeTime := metav1.NewTime(now.Add(time.Hour))
-		completionTime := metav1.NewTime(now.Add(time.Hour * 2))
-		batchState := models.RadixBatch{
-			CreationTime: commonUtils.FormatTimestamp(now),
+		radixBatch := models.RadixBatch{
 			Name:         "some-batch-name",
-			Status: radixv1.RadixBatchStatus{
-				Condition: radixv1.RadixBatchCondition{
-					Type:           radixv1.BatchConditionTypeCompleted,
-					Reason:         string(radixv1.BatchJobPhaseSucceeded),
-					Message:        "test message",
-					ActiveTime:     &activeTime,
-					CompletionTime: &completionTime,
+			CreationTime: commonUtils.FormatTimestamp(now),
+			Started:      commonUtils.FormatTime(pointers.Ptr(metav1.NewTime(now.Add(time.Minute)))),
+			Ended:        commonUtils.FormatTime(pointers.Ptr(metav1.NewTime(now.Add(time.Minute * 50)))),
+			Status:       "some status",
+			Message:      "test message",
+			JobStatuses: []models.RadixBatchJobStatus{
+				{
+					Name:         "job-name1",
+					CreationTime: commonUtils.FormatTimestamp(now.Add(time.Minute * 2)),
+					JobId:        "",
+					Started:      commonUtils.FormatTimestamp(now.Add(time.Minute * 3)),
+					Ended:        commonUtils.FormatTimestamp(now.Add(time.Hour * 4)),
+					Status:       "some job1 status",
+					Message:      "some job1 message",
+				},
+				{
+					Name:         "job-name2",
+					CreationTime: commonUtils.FormatTimestamp(now.Add(time.Minute * 20)),
+					JobId:        "",
+					Started:      commonUtils.FormatTimestamp(now.Add(time.Minute * 30)),
+					Ended:        commonUtils.FormatTimestamp(now.Add(time.Hour * 40)),
+					Status:       "some job2 status",
+					Message:      "some job2 message",
 				},
 			},
 		}
 		batchHandler.
 			EXPECT().
 			GetRadixBatches().
-			Return([]models.RadixBatch{batchState}, nil).
+			Return([]models.RadixBatch{radixBatch}, nil).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
@@ -60,11 +73,21 @@ func TestGetBatches(t *testing.T) {
 			var returnedBatches []models.RadixBatch
 			test.GetResponseBody(response, &returnedBatches)
 			assert.Len(t, returnedBatches, 1)
-			assert.Equal(t, batchState.Name, returnedBatches[0].Name)
-			assert.Equal(t, batchState.CreationTime, returnedBatches[0].CreationTime)
-			assert.Equal(t, commonUtils.FormatTime(batchState.Status.Condition.ActiveTime), commonUtils.FormatTime(returnedBatches[0].Status.Condition.ActiveTime))
-			assert.Equal(t, commonUtils.FormatTime(batchState.Status.Condition.CompletionTime), commonUtils.FormatTime(returnedBatches[0].Status.Condition.CompletionTime))
-			assert.Equal(t, batchState.Status.Condition.Message, returnedBatches[0].Status.Condition.Message)
+			assert.Equal(t, radixBatch.Name, returnedBatches[0].Name)
+			assert.Equal(t, radixBatch.CreationTime, returnedBatches[0].CreationTime)
+			assert.Equal(t, radixBatch.Started, returnedBatches[0].Started)
+			assert.Equal(t, radixBatch.Ended, returnedBatches[0].Ended)
+			assert.Equal(t, radixBatch.Status, returnedBatches[0].Status)
+			assert.Equal(t, radixBatch.Message, returnedBatches[0].Message)
+			assert.Equal(t, len(radixBatch.JobStatuses), len(returnedBatches[0].JobStatuses))
+			for i := 0; i < len(radixBatch.JobStatuses); i++ {
+				assert.Equal(t, radixBatch.JobStatuses[i].Name, returnedBatches[0].JobStatuses[i].Name)
+				assert.Equal(t, radixBatch.JobStatuses[i].CreationTime, returnedBatches[0].JobStatuses[i].CreationTime)
+				assert.Equal(t, radixBatch.JobStatuses[i].Started, returnedBatches[0].JobStatuses[i].Started)
+				assert.Equal(t, radixBatch.JobStatuses[i].Ended, returnedBatches[0].JobStatuses[i].Ended)
+				assert.Equal(t, radixBatch.JobStatuses[i].Status, returnedBatches[0].JobStatuses[i].Status)
+				assert.Equal(t, radixBatch.JobStatuses[i].Message, returnedBatches[0].JobStatuses[i].Message)
+			}
 		}
 	})
 	/*

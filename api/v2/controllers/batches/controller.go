@@ -16,7 +16,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const batchNameParam = "batchName"
+const (
+	batchNameParam = "batchName"
+	jobNameParam   = "jobName"
+)
 
 type batchController struct {
 	*controllers.ControllerBase
@@ -46,24 +49,34 @@ func (controller *batchController) GetRoutes() models.Routes {
 		models.Route{
 			Path:        fmt.Sprintf("/v2/batches/{%s}", batchNameParam),
 			Method:      http.MethodGet,
-			HandlerFunc: controller.GetBatchStatus,
+			HandlerFunc: controller.GetBatch,
 		},
 		models.Route{
 			Path:        fmt.Sprintf("/v2/batches/{%s}", batchNameParam),
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteBatch,
 		},
+		models.Route{
+			Path:        fmt.Sprintf("/v2/batches/{%s}/stop", batchNameParam),
+			Method:      http.MethodPost,
+			HandlerFunc: controller.StopBatch,
+		},
+		models.Route{
+			Path:        fmt.Sprintf("/v2/batches/{%s}/jobs/{%s}/stop", batchNameParam, jobNameParam),
+			Method:      http.MethodPost,
+			HandlerFunc: controller.StopBatchJob,
+		},
 	}
 	return routes
 }
 
-// swagger:operation POST /v2/batches Batch createBatch
+// swagger:operation POST /v2/batches BatchV2 createBatchV2hack
 // ---
 // summary: Create batch
 // parameters:
 // - name: batchCreation
 //   in: body
-//   description: Batch to create
+//   description: BatchV2 to create
 //   required: true
 //   schema:
 //       "$ref": "#/definitions/BatchScheduleDescription"
@@ -98,7 +111,7 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	batchState, err := controller.handler.CreateRadixBatch(&batchScheduleDescription)
+	radixBatch, err := controller.handler.CreateRadixBatch(&batchScheduleDescription)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -108,10 +121,10 @@ func (controller *batchController) CreateBatch(w http.ResponseWriter, r *http.Re
 		log.Warnf("failed to maintain batch history: %v", err)
 	}
 
-	utils.JSONResponse(w, &batchState)
+	utils.JSONResponse(w, &radixBatch)
 }
 
-// swagger:operation GET /v2/batches/ Batch getBatches
+// swagger:operation GET /v2/batches/ BatchV2 getBatchesV2hack
 // ---
 // summary: Gets batches
 // parameters:
@@ -137,7 +150,7 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 	utils.JSONResponse(w, batches)
 }
 
-// swagger:operation GET /v2/batches/{batchName} Batch getBatch
+// swagger:operation GET /v2/batches/{batchName} BatchV2 getBatchV2hack
 // ---
 // summary: Gets batch
 // parameters:
@@ -159,18 +172,18 @@ func (controller *batchController) GetBatches(w http.ResponseWriter, r *http.Req
 //     description: "Internal server error"
 //     schema:
 //        "$ref": "#/definitions/Status"
-func (controller *batchController) GetBatchStatus(w http.ResponseWriter, r *http.Request) {
+func (controller *batchController) GetBatch(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
 	log.Debugf("Get batch %s", batchName)
-	batch, err := controller.handler.GetRadixBatchStatus(batchName)
+	radixBatch, err := controller.handler.GetRadixBatch(batchName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
 	}
-	utils.JSONResponse(w, batch)
+	utils.JSONResponse(w, radixBatch)
 }
 
-// swagger:operation DELETE /v2/batches/{batchName} Batch deleteBatch
+// swagger:operation DELETE /v2/batches/{batchName} BatchV2 deleteBatchV2hack
 // ---
 // summary: Delete batch
 // parameters:
@@ -207,4 +220,65 @@ func (controller *batchController) DeleteBatch(w http.ResponseWriter, r *http.Re
 		Message: fmt.Sprintf("batch %s successfully deleted", batchName),
 	}
 	utils.StatusResponse(w, &status)
+}
+
+// swagger:operation POST /v2/batches/{batchName}/stop BatchV2 stopBatchV2hack
+// ---
+// summary: Stop batch
+// parameters:
+// - name: batchName
+//   in: path
+//   description: Name of batch
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful stop batch"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *batchController) StopBatch(w http.ResponseWriter, r *http.Request) {
+	batchName := mux.Vars(r)[batchNameParam]
+	log.Debugf("Stop batch %s", batchName)
+	controller.HandleError(w, fmt.Errorf("stop batch is not supported yet"))
+}
+
+// swagger:operation POST /v2/batches/{batchName}/jobs/{jobName}/stop BatchV2 stopBatchJobV2hack
+// ---
+// summary: Stop batch job
+// parameters:
+// - name: batchName
+//   in: path
+//   description: Name of batch
+//   type: string
+//   required: true
+// - name: jobName
+//   in: path
+//   description: Name of job
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful stop batch job"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *batchController) StopBatchJob(w http.ResponseWriter, r *http.Request) {
+	batchName := mux.Vars(r)[batchNameParam]
+	log.Debugf("Stop batch job %s", batchName)
+	controller.HandleError(w, fmt.Errorf("stop batch job is not supported yet"))
 }

@@ -53,11 +53,16 @@ func (controller *jobController) GetRoutes() models.Routes {
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteJob,
 		},
+		models.Route{
+			Path:        fmt.Sprintf("/v2/jobs/{%s}/stop", jobNameParam),
+			Method:      http.MethodPost,
+			HandlerFunc: controller.StopJob,
+		},
 	}
 	return routes
 }
 
-// swagger:operation POST /jobs Job createJob
+// swagger:operation POST /v2/jobs JobV2 createJobV2hack
 // ---
 // summary: Create job
 // parameters:
@@ -111,7 +116,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 	utils.JSONResponse(w, &jobState)
 }
 
-// swagger:operation GET /jobs/ Job getJobs
+// swagger:operation GET /v2/jobs/ JobV2 getJobsV2hack
 // ---
 // summary: Gets jobs
 // parameters:
@@ -137,7 +142,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 	utils.JSONResponse(w, jobs)
 }
 
-// swagger:operation GET /jobs/{jobName} Job getJob
+// swagger:operation GET /v2/jobs/{jobName} JobV2 getJobV2hack
 // ---
 // summary: Gets job
 // parameters:
@@ -162,7 +167,7 @@ func (controller *jobController) GetJobs(w http.ResponseWriter, r *http.Request)
 func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
 	log.Debugf("Get job %s", jobName)
-	job, err := controller.handler.GetRadixBatchStatus(jobName)
+	job, err := controller.handler.GetRadixBatch(jobName)
 	if err != nil {
 		controller.HandleError(w, err)
 		return
@@ -170,7 +175,7 @@ func (controller *jobController) GetJob(w http.ResponseWriter, r *http.Request) 
 	utils.JSONResponse(w, job)
 }
 
-// swagger:operation DELETE /jobs/{jobName} Job deleteJob
+// swagger:operation DELETE /v2/jobs/{jobName} JobV2 deleteJobV2hack
 // ---
 // summary: Delete job
 // parameters:
@@ -207,4 +212,32 @@ func (controller *jobController) DeleteJob(w http.ResponseWriter, r *http.Reques
 		Message: fmt.Sprintf("job %s successfully deleted", jobName),
 	}
 	utils.StatusResponse(w, &status)
+}
+
+// swagger:operation POST /v2/jobs/{jobName}/stop JobV2 stopJobV2hack
+// ---
+// summary: Stop job
+// parameters:
+// - name: jobName
+//   in: path
+//   description: Name of job
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful delete job"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *jobController) StopJob(w http.ResponseWriter, r *http.Request) {
+	jobName := mux.Vars(r)[jobNameParam]
+	log.Debugf("Stop job %s", jobName)
+	controller.HandleError(w, fmt.Errorf("stop job is not supported yet"))
 }

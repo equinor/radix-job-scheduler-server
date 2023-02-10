@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/equinor/radix-job-scheduler-server/models"
@@ -23,16 +22,15 @@ func NewServer(env *schedulerModels.Env, apiV1Controllers []models.Controller, a
 	routerV2 := mux.NewRouter().StrictSlash(true)
 
 	if env.UseSwagger {
-		initSwagger(routerV1, "")
-		initSwagger(routerV1, "v2/")
+		initSwagger(routerV1)
 	}
 
 	initializeAPIServer(routerV1, apiVersionRouteV1, apiV1Controllers)
-	initializeAPIServer(routerV2, apiVersionRouteV2, apiV2Controllers)
+	initializeAPIServer(routerV2, "/api", apiV2Controllers)
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle(apiVersionRouteV1+"/", routerV1)
-	serveMux.Handle(apiVersionRouteV2+"/", routerV2)
+	serveMux.Handle("/api/", routerV2)
 
 	if env.UseSwagger {
 		serveMux.Handle("/swaggerui/", negroni.New(negroni.Wrap(routerV1), negroni.Wrap(routerV2)))
@@ -46,14 +44,14 @@ func NewServer(env *schedulerModels.Env, apiV1Controllers []models.Controller, a
 	return n
 }
 
-func initSwagger(router *mux.Router, apiVersion string) {
+func initSwagger(router *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)
 	}
 
 	staticServer := http.FileServer(statikFS)
-	prefix := fmt.Sprintf("/swaggerui/%s", apiVersion)
+	prefix := "/swaggerui/"
 	sh := http.StripPrefix(prefix, staticServer)
 	router.PathPrefix(prefix).Handler(sh)
 }

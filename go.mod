@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/equinor/radix-common v1.2.7
-	github.com/equinor/radix-job-scheduler v1.7.3-0.20230206175338-0fb1597920ec
+	github.com/equinor/radix-job-scheduler v1.7.3-0.20230210133034-2d3e338eabe0
 	github.com/equinor/radix-operator v1.32.1
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/handlers v1.5.1
@@ -14,6 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	github.com/urfave/negroni/v2 v2.0.2
+	k8s.io/apimachinery v0.23.9
 )
 
 require (
@@ -53,7 +54,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.23.9 // indirect
 	k8s.io/apiextensions-apiserver v0.23.9 // indirect
-	k8s.io/apimachinery v0.23.9 // indirect
 	k8s.io/client-go v0.23.9 // indirect
 	k8s.io/klog/v2 v2.60.1-0.20220317184644-43cc75f9ae89 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
