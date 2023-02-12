@@ -76,7 +76,7 @@ func (controller *jobController) GetRoutes() models.Routes {
 //   "200":
 //     description: "Successful create job"
 //     schema:
-//        "$ref": "#/definitions/JobStatus"
+//        "$ref": "#/definitions/RadixBatch"
 //   "400":
 //     description: "Bad request"
 //     schema:
@@ -126,7 +126,7 @@ func (controller *jobController) CreateJob(w http.ResponseWriter, r *http.Reques
 //     schema:
 //        type: "array"
 //        items:
-//           "$ref": "#/definitions/JobStatus"
+//           "$ref": "#/definitions/RadixBatch"
 //   "500":
 //     description: "Internal server error"
 //     schema:
