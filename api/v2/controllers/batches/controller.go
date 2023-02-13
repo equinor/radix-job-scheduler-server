@@ -246,8 +246,18 @@ func (controller *batchController) DeleteBatch(w http.ResponseWriter, r *http.Re
 //        "$ref": "#/definitions/Status"
 func (controller *batchController) StopBatch(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
-	log.Debugf("Stop batch %s", batchName)
-	controller.HandleError(w, fmt.Errorf("stop batch is not supported yet"))
+	err := controller.handler.StopRadixBatch(batchName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+
+	status := schedulerModels.Status{
+		Status:  schedulerModels.StatusSuccess,
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("batch %s successfully stopped", batchName),
+	}
+	utils.StatusResponse(w, &status)
 }
 
 // swagger:operation POST /v2/batches/{batchName}/jobs/{jobName}/stop BatchV2 stopBatchJobV2hack
@@ -279,6 +289,17 @@ func (controller *batchController) StopBatch(w http.ResponseWriter, r *http.Requ
 //        "$ref": "#/definitions/Status"
 func (controller *batchController) StopBatchJob(w http.ResponseWriter, r *http.Request) {
 	batchName := mux.Vars(r)[batchNameParam]
-	log.Debugf("Stop batch job %s", batchName)
-	controller.HandleError(w, fmt.Errorf("stop batch job is not supported yet"))
+	jobName := mux.Vars(r)[jobNameParam]
+	err := controller.handler.StopRadixBatchJob(batchName, jobName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+
+	status := schedulerModels.Status{
+		Status:  schedulerModels.StatusSuccess,
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("job %s in the batch %s successfully stopped", jobName, batchName),
+	}
+	utils.StatusResponse(w, &status)
 }
