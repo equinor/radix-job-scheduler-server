@@ -52,3 +52,7 @@ docker-push-main:
 	docker build -t $(DOCKER_REGISTRY)/radix-job-scheduler-server:main-latest -f Dockerfile .
 	az acr login --name $(CONTAINER_REPO)
 	docker push $(DOCKER_REGISTRY)/radix-job-scheduler-server:main-latest
+
+.HONY: staticcheck
+staticcheck:
+	staticcheck `go list ./...` && go vet `go list ./...`
