@@ -120,97 +120,102 @@ func TestGetBatches(t *testing.T) {
 	})
 }
 
-/*func TestGetBatch(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
+func TestGetBatch(t *testing.T) {
+	batchName := "some-batch-name"
+	t.Run("Get batch - success", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchName := "batchname"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
-		batchState := modelsv2.BatchStatus{
-			JobStatus: modelsv2.JobStatus{
-				Name:    batchName,
-				Started: commonUtils.FormatTimestamp(time.Now()),
-				Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
-				Status:  "batchstatus",
+		batchHandler := batchMock.NewMockHandler(ctrl)
+		now := time.Now()
+		radixBatch := modelsv2.RadixBatch{
+			Name:         batchName,
+			CreationTime: commonUtils.FormatTimestamp(now),
+			Started:      commonUtils.FormatTime(pointers.Ptr(metav1.NewTime(now.Add(time.Minute)))),
+			Ended:        commonUtils.FormatTime(pointers.Ptr(metav1.NewTime(now.Add(time.Minute * 50)))),
+			Status:       "some status",
+			Message:      "test message",
+			JobStatuses: []modelsv2.RadixBatchJobStatus{
+				{
+					Name:         "job-name1",
+					CreationTime: commonUtils.FormatTimestamp(now.Add(time.Minute * 2)),
+					JobId:        "",
+					Started:      commonUtils.FormatTimestamp(now.Add(time.Minute * 3)),
+					Ended:        commonUtils.FormatTimestamp(now.Add(time.Hour * 4)),
+					Status:       "some job1 status",
+					Message:      "some job1 message",
+				},
+				{
+					Name:         "job-name2",
+					CreationTime: commonUtils.FormatTimestamp(now.Add(time.Minute * 20)),
+					JobId:        "",
+					Started:      commonUtils.FormatTimestamp(now.Add(time.Minute * 30)),
+					Ended:        commonUtils.FormatTimestamp(now.Add(time.Hour * 40)),
+					Status:       "some job2 status",
+					Message:      "some job2 message",
+				},
 			},
 		}
 		batchHandler.
 			EXPECT().
-			GetBatch(batchName).
-			Return(&batchState, nil).
+			GetRadixBatch(batchName).
+			Return(&radixBatch, nil).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s", batchName))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("api/v2/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusOK, response.StatusCode)
-			var returnedBatch modelsv2.BatchStatus
+			var returnedBatch modelsv2.RadixBatch
 			test.GetResponseBody(response, &returnedBatch)
-			assert.Equal(t, batchState.Name, returnedBatch.Name)
-			assert.Equal(t, batchState.Started, returnedBatch.Started)
-			assert.Equal(t, batchState.Ended, returnedBatch.Ended)
-			assert.Equal(t, batchState.Status, returnedBatch.Status)
+			assert.Equal(t, radixBatch.Name, returnedBatch.Name)
+			assert.Equal(t, radixBatch.CreationTime, returnedBatch.CreationTime)
+			assert.Equal(t, radixBatch.Started, returnedBatch.Started)
+			assert.Equal(t, radixBatch.Ended, returnedBatch.Ended)
+			assert.Equal(t, radixBatch.Status, returnedBatch.Status)
+			assert.Equal(t, radixBatch.Message, returnedBatch.Message)
+			assert.Equal(t, len(radixBatch.JobStatuses), len(returnedBatch.JobStatuses))
+			for i := 0; i < len(radixBatch.JobStatuses); i++ {
+				assert.Equal(t, radixBatch.JobStatuses[i].Name, returnedBatch.JobStatuses[i].Name)
+				assert.Equal(t, radixBatch.JobStatuses[i].CreationTime, returnedBatch.JobStatuses[i].CreationTime)
+				assert.Equal(t, radixBatch.JobStatuses[i].Started, returnedBatch.JobStatuses[i].Started)
+				assert.Equal(t, radixBatch.JobStatuses[i].Ended, returnedBatch.JobStatuses[i].Ended)
+				assert.Equal(t, radixBatch.JobStatuses[i].Status, returnedBatch.JobStatuses[i].Status)
+				assert.Equal(t, radixBatch.JobStatuses[i].Message, returnedBatch.JobStatuses[i].Message)
+			}
 		}
 	})
-
-	t.Run("not found", func(t *testing.T) {
+	t.Run("Get batch - status code 500", func(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchName, kind := "anybatch", "batch"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := batchMock.NewMockHandler(ctrl)
 		batchHandler.
 			EXPECT().
-			GetBatch(gomock.Any()).
-			Return(nil, apiErrors.NewNotFound(kind, batchName)).
+			GetRadixBatch(batchName).
+			Return(nil, apiErrors.NewUnknown(fmt.Errorf("unhandled error"))).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s", batchName))
-		response := <-responseChannel
-		assert.NotNil(t, response)
-
-		if response != nil {
-			assert.Equal(t, http.StatusNotFound, response.StatusCode)
-			var returnedStatus modelsv2.Status
-			test.GetResponseBody(response, &returnedStatus)
-			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
-			assert.Equal(t, modelsv2.StatusFailure, returnedStatus.Status)
-			assert.Equal(t, modelsv2.StatusReasonNotFound, returnedStatus.Reason)
-			assert.Equal(t, apiErrors.NotFoundMessage(kind, batchName), returnedStatus.Message)
-		}
-	})
-
-	t.Run("internal error", func(t *testing.T) {
-		t.Parallel()
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
-		batchHandler.
-			EXPECT().
-			GetBatch(gomock.Any()).
-			Return(nil, errors.NewV2("unhandled error")).
-			Times(1)
-
-		controllerTestUtils := setupTest(batchHandler)
-		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s", "anybatch"))
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("api/v2/batches/%s", batchName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 
 		if response != nil {
 			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
-			var returnedStatus modelsv2.Status
+			var returnedStatus models.Status
 			test.GetResponseBody(response, &returnedStatus)
 			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
-			assert.Equal(t, modelsv2.StatusFailure, returnedStatus.Status)
-			assert.Equal(t, modelsv2.StatusReasonUnknown, returnedStatus.Reason)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
 		}
 	})
 }
+
+/*
 
 func TestCreateBatch(t *testing.T) {
 	t.Run("empty body - successful", func(t *testing.T) {
