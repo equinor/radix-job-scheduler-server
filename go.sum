@@ -126,6 +126,8 @@ github.com/equinor/radix-job-scheduler v1.7.3-0.20230213153027-71238ed3d3cd h1:y
 github.com/equinor/radix-job-scheduler v1.7.3-0.20230213153027-71238ed3d3cd/go.mod h1:a8FqCfnCjeNPkZFHcHhrKVicNj/0yonToBZdeozzkQ0=
 github.com/equinor/radix-job-scheduler v1.7.3-0.20230214144931-00b348b917c9 h1:uCS8rzxqZ0wv8vn+4O7QY8Zq3yK2BUdhdovUa3V+wyc=
 github.com/equinor/radix-job-scheduler v1.7.3-0.20230214144931-00b348b917c9/go.mod h1:a8FqCfnCjeNPkZFHcHhrKVicNj/0yonToBZdeozzkQ0=
+github.com/equinor/radix-job-scheduler v1.7.3-0.20230214150733-a3e379ac4717 h1:w1eBydhq/6GII5B6vazgSXTTFJguWlsGtJHTjlkSrwQ=
+github.com/equinor/radix-job-scheduler v1.7.3-0.20230214150733-a3e379ac4717/go.mod h1:a8FqCfnCjeNPkZFHcHhrKVicNj/0yonToBZdeozzkQ0=
 github.com/equinor/radix-operator v1.32.3 h1:cf88SbU6gRUUR34uAgzPTLq5SrYmBqDu8sjbYfUAiH8=
 github.com/equinor/radix-operator v1.32.3/go.mod h1:k0hqJCNPtSQ3JlXSX36e2X6fHtSlG3W1M59yiITg+9U=
 github.com/evanphx/json-patch v4.12.0+incompatible h1:4onqiflcdA9EOZ4RxV643DvftH5pOlLGNtQ5lPWQu84=
