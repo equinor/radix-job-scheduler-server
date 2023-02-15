@@ -51,8 +51,14 @@ func (ctrl *ControllerTestUtils) ExecuteRequestWithBody(method, path string, bod
 		server := httptest.NewServer(router)
 		defer server.Close()
 		url := buildURLFromServer(server, path)
-		request, _ := http.NewRequest(method, url, reader)
-		response, _ := http.DefaultClient.Do(request)
+		request, err := http.NewRequest(method, url, reader)
+		if err != nil {
+			panic(err)
+		}
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			panic(err)
+		}
 		responseChan <- response
 		close(responseChan)
 	}()
