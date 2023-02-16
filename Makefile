@@ -33,8 +33,6 @@ swagger:
 	swagger generate spec -o ./swagger.json --scan-models
 	mv swagger.json ./swaggerui_src/swagger.json
 	swagger validate ./swaggerui_src/swagger.json && \
-	sed 's/V2hack//g' ./swaggerui_src/swagger.json > ./swaggerui_src/swagger-tmp.json && \
-	mv ./swaggerui_src/swagger-tmp.json  ./swaggerui_src/swagger.json && \
 	statik -src=./swaggerui_src/ -p swaggerui
 
 .PHONY: docker-build

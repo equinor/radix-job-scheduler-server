@@ -11,19 +11,20 @@ import (
 	"github.com/urfave/negroni/v2"
 )
 
+const apiVersionRoute = "/api/v1"
+
 // NewServer creates a new Radix job scheduler REST service
-func NewServer(env *schedulerModels.Env, apiV1Controllers []models.Controller, apiV2Controllers []models.Controller) http.Handler {
+func NewServer(env *schedulerModels.Env, controllers ...models.Controller) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 
 	if env.UseSwagger {
 		initSwagger(router)
 	}
 
-	initializeAPIServer(router, apiV1Controllers)
-	initializeAPIServer(router, apiV2Controllers)
+	initializeAPIServer(router, controllers)
 
 	serveMux := http.NewServeMux()
-	serveMux.Handle("/api/", router)
+	serveMux.Handle(apiVersionRoute+"/", router)
 
 	if env.UseSwagger {
 		serveMux.Handle("/swaggerui/", negroni.New(negroni.Wrap(router)))
@@ -44,9 +45,8 @@ func initSwagger(router *mux.Router) {
 	}
 
 	staticServer := http.FileServer(statikFS)
-	prefix := "/swaggerui/"
-	sh := http.StripPrefix(prefix, staticServer)
-	router.PathPrefix(prefix).Handler(sh)
+	sh := http.StripPrefix("/swaggerui/", staticServer)
+	router.PathPrefix("/swaggerui/").Handler(sh)
 }
 
 func initializeAPIServer(router *mux.Router, controllers []models.Controller) {
@@ -58,7 +58,7 @@ func initializeAPIServer(router *mux.Router, controllers []models.Controller) {
 }
 
 func addHandlerRoute(router *mux.Router, route models.Route) {
-	path := ("/api") + route.Path
+	path := apiVersionRoute + route.Path
 	router.HandleFunc(path,
 		utils.NewRadixMiddleware(path, route.Method, route.HandlerFunc).Handle).Methods(route.Method)
 }

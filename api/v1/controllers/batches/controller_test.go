@@ -12,7 +12,7 @@ import (
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
 	batchApi "github.com/equinor/radix-job-scheduler/api/v1/batches"
 	batchMock "github.com/equinor/radix-job-scheduler/api/v1/batches/mock"
-	"github.com/equinor/radix-job-scheduler/models"
+	models "github.com/equinor/radix-job-scheduler/models/common"
 	modelsV1 "github.com/equinor/radix-job-scheduler/models/v1"
 	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
@@ -21,7 +21,7 @@ import (
 
 func setupTest(handler batchApi.BatchHandler) *test.ControllerTestUtils {
 	controller := batchController{handler: handler}
-	controllerTestUtils := test.NewV1(&controller)
+	controllerTestUtils := test.New(&controller)
 	return &controllerTestUtils
 }
 
@@ -70,7 +70,7 @@ func TestGetBatches(t *testing.T) {
 		batchHandler.
 			EXPECT().
 			GetBatches().
-			Return(nil, errors.New("unhandled error")).
+			Return(nil, apiErrors.NewUnknown(fmt.Errorf("unhandled error"))).
 			Times(1)
 
 		controllerTestUtils := setupTest(batchHandler)
@@ -354,7 +354,7 @@ func TestCreateBatch(t *testing.T) {
 			assert.Equal(t, http.StatusUnprocessableEntity, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonInvalid, returnedStatus.Reason)
-			assert.Equal(t, apiErrors.InvalidMessage("BatchScheduleDescription"), returnedStatus.Message)
+			assert.Equal(t, apiErrors.InvalidMessage("BatchScheduleDescription", ""), returnedStatus.Message)
 		}
 	})
 

@@ -5,16 +5,13 @@ import (
 	"net/http"
 	"os"
 
-	batchControllersV1 "github.com/equinor/radix-job-scheduler-server/api/v1/controllers/batches"
-	jobControllersV1 "github.com/equinor/radix-job-scheduler-server/api/v1/controllers/jobs"
-	batchControllersV2 "github.com/equinor/radix-job-scheduler-server/api/v2/controllers/batches"
-	jobControllersV2 "github.com/equinor/radix-job-scheduler-server/api/v2/controllers/jobs"
+	batchControllers "github.com/equinor/radix-job-scheduler-server/api/v1/controllers/batches"
+	jobControllers "github.com/equinor/radix-job-scheduler-server/api/v1/controllers/jobs"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/router"
 	_ "github.com/equinor/radix-job-scheduler-server/swaggerui"
-	batchApiV1 "github.com/equinor/radix-job-scheduler/api/v1/batches"
-	jobApiV1 "github.com/equinor/radix-job-scheduler/api/v1/jobs"
-	batchApiV2 "github.com/equinor/radix-job-scheduler/api/v2"
+	batchApi "github.com/equinor/radix-job-scheduler/api/v1/batches"
+	jobApi "github.com/equinor/radix-job-scheduler/api/v1/jobs"
 	apiModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/kube"
 	"github.com/equinor/radix-operator/pkg/apis/utils"
@@ -22,11 +19,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
-
-type apiControllers struct {
-	v1 []models.Controller
-	v2 []models.Controller
-}
 
 func main() {
 	env := apiModels.NewEnv()
@@ -43,8 +35,7 @@ func main() {
 
 	go func() {
 		log.Infof("Radix job scheduler API is serving on port %s", *port)
-		apiControllers := getControllers(env)
-		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, apiControllers.v1, apiControllers.v2)))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, getControllers(env)...)))
 		errs <- err
 	}()
 
@@ -54,18 +45,12 @@ func main() {
 	}
 }
 
-func getControllers(env *apiModels.Env) *apiControllers {
+func getControllers(env *apiModels.Env) []models.Controller {
 	kubeClient, radixClient, _, secretProviderClient := utils.GetKubernetesClient()
 	kubeUtil, _ := kube.New(kubeClient, radixClient, secretProviderClient)
-	return &apiControllers{
-		v1: []models.Controller{
-			jobControllersV1.New(jobApiV1.New(env, kubeUtil)),
-			batchControllersV1.New(batchApiV1.New(env, kubeUtil, kubeClient, radixClient)),
-		},
-		v2: []models.Controller{
-			jobControllersV2.New(batchApiV2.New(env, kubeUtil, kubeClient, radixClient)),
-			batchControllersV2.New(batchApiV2.New(env, kubeUtil, kubeClient, radixClient)),
-		},
+	return []models.Controller{
+		jobControllers.New(jobApi.New(env, kubeUtil)),
+		batchControllers.New(batchApi.New(env, kubeUtil, kubeClient, radixClient)),
 	}
 }
 

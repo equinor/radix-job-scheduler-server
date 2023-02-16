@@ -5,7 +5,7 @@ import (
 
 	"github.com/equinor/radix-job-scheduler-server/utils"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
-	"github.com/equinor/radix-job-scheduler/models"
+	models "github.com/equinor/radix-job-scheduler/models/common"
 	log "github.com/sirupsen/logrus"
 )
 

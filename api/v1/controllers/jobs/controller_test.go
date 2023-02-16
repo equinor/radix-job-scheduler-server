@@ -3,7 +3,6 @@ package jobs
 import (
 	"errors"
 	"fmt"
-	modelsV1 "github.com/equinor/radix-job-scheduler/models/v1"
 	"net/http"
 	"testing"
 	"time"
@@ -13,7 +12,8 @@ import (
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
 	jobApi "github.com/equinor/radix-job-scheduler/api/v1/jobs"
 	jobMock "github.com/equinor/radix-job-scheduler/api/v1/jobs/mock"
-	"github.com/equinor/radix-job-scheduler/models"
+	models "github.com/equinor/radix-job-scheduler/models/common"
+	modelsV1 "github.com/equinor/radix-job-scheduler/models/v1"
 	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +21,7 @@ import (
 
 func setupTest(handler jobApi.JobHandler) *test.ControllerTestUtils {
 	jobController := jobController{handler: handler}
-	controllerTestUtils := test.NewV1(&jobController)
+	controllerTestUtils := test.New(&jobController)
 	return &controllerTestUtils
 }
 
@@ -338,7 +338,7 @@ func TestCreateJob(t *testing.T) {
 			assert.Equal(t, http.StatusUnprocessableEntity, returnedStatus.Code)
 			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
 			assert.Equal(t, models.StatusReasonInvalid, returnedStatus.Reason)
-			assert.Equal(t, apiErrors.InvalidMessage("payload"), returnedStatus.Message)
+			assert.Equal(t, apiErrors.InvalidMessage("payload", ""), returnedStatus.Message)
 		}
 	})
 
