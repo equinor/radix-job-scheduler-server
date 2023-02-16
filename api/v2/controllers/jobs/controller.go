@@ -238,6 +238,17 @@ func (controller *jobController) DeleteJob(w http.ResponseWriter, r *http.Reques
 //        "$ref": "#/definitions/Status"
 func (controller *jobController) StopJob(w http.ResponseWriter, r *http.Request) {
 	jobName := mux.Vars(r)[jobNameParam]
-	log.Debugf("Stop job %s", jobName)
-	controller.HandleError(w, fmt.Errorf("stop job is not supported yet"))
+
+	err := controller.handler.StopRadixBatchJob(batchName, jobName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+
+	status := schedulerModels.Status{
+		Status:  schedulerModels.StatusSuccess,
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("job %s in the batch %s successfully stopped", jobName, batchName),
+	}
+	utils.StatusResponse(w, &status)
 }
