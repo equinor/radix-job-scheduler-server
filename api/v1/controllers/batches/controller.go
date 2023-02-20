@@ -16,7 +16,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const batchNameParam = "batchName"
+const (
+	batchNameParam = "batchName"
+	jobNameParam   = "jobName"
+)
 
 type batchController struct {
 	*controllers.ControllerBase
@@ -52,6 +55,16 @@ func (controller *batchController) GetRoutes() models.Routes {
 			Path:        fmt.Sprintf("/batches/{%s}", batchNameParam),
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteBatch,
+		},
+		models.Route{
+			Path:        fmt.Sprintf("/batches/{%s}/stop", batchNameParam),
+			Method:      http.MethodPost,
+			HandlerFunc: controller.StopBatch,
+		},
+		models.Route{
+			Path:        fmt.Sprintf("/batches/{%s}/jobs/{%s}/stop", batchNameParam, jobNameParam),
+			Method:      http.MethodPost,
+			HandlerFunc: controller.StopBatchJob,
 		},
 	}
 	return routes
@@ -205,6 +218,88 @@ func (controller *batchController) DeleteBatch(w http.ResponseWriter, r *http.Re
 		Status:  schedulerModels.StatusSuccess,
 		Code:    http.StatusOK,
 		Message: fmt.Sprintf("batch %s successfully deleted", batchName),
+	}
+	utils.StatusResponse(w, &status)
+}
+
+// swagger:operation POST /batches/{batchName}/stop Batch stopBatch
+// ---
+// summary: Stop batch
+// parameters:
+// - name: batchName
+//   in: path
+//   description: Name of batch
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful stop batch"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *batchController) StopBatch(w http.ResponseWriter, r *http.Request) {
+	batchName := mux.Vars(r)[batchNameParam]
+	err := controller.handler.StopBatch(batchName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+
+	status := schedulerModels.Status{
+		Status:  schedulerModels.StatusSuccess,
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("batch %s successfully stopped", batchName),
+	}
+	utils.StatusResponse(w, &status)
+}
+
+// swagger:operation POST /batches/{batchName}/jobs/{jobName}/stop Batch stopBatchJob
+// ---
+// summary: Stop batch job
+// parameters:
+// - name: batchName
+//   in: path
+//   description: Name of batch
+//   type: string
+//   required: true
+// - name: jobName
+//   in: path
+//   description: Name of job
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful stop batch job"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *batchController) StopBatchJob(w http.ResponseWriter, r *http.Request) {
+	batchName := mux.Vars(r)[batchNameParam]
+	jobName := mux.Vars(r)[jobNameParam]
+	err := controller.handler.StopBatchJob(batchName, jobName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+
+	status := schedulerModels.Status{
+		Status:  schedulerModels.StatusSuccess,
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("job %s in the batch %s successfully stopped", jobName, batchName),
 	}
 	utils.StatusResponse(w, &status)
 }

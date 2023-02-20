@@ -10,8 +10,8 @@ import (
 	"github.com/equinor/radix-common/utils"
 	"github.com/equinor/radix-job-scheduler-server/api/utils/test"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
-	jobApi "github.com/equinor/radix-job-scheduler/api/v1/jobs"
-	jobMock "github.com/equinor/radix-job-scheduler/api/v1/jobs/mock"
+	"github.com/equinor/radix-job-scheduler/api/v1/jobs"
+	"github.com/equinor/radix-job-scheduler/api/v1/jobs/mock"
 	models "github.com/equinor/radix-job-scheduler/models/common"
 	modelsV1 "github.com/equinor/radix-job-scheduler/models/v1"
 	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTest(handler jobApi.JobHandler) *test.ControllerTestUtils {
+func setupTest(handler jobs.JobHandler) *test.ControllerTestUtils {
 	jobController := jobController{handler: handler}
 	controllerTestUtils := test.New(&jobController)
 	return &controllerTestUtils
@@ -30,7 +30,7 @@ func TestGetJobs(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobState := modelsV1.JobStatus{
 			Name:    "jobname",
 			Started: utils.FormatTimestamp(time.Now()),
@@ -64,7 +64,7 @@ func TestGetJobs(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJobs().
@@ -93,7 +93,7 @@ func TestGetJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "jobname"
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobState := modelsV1.JobStatus{
 			Name:    jobName,
 			Started: utils.FormatTimestamp(time.Now()),
@@ -127,7 +127,7 @@ func TestGetJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName, kind := "anyjob", "job"
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJob(gomock.Any()).
@@ -154,7 +154,7 @@ func TestGetJob(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			GetJob(gomock.Any()).
@@ -189,7 +189,7 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription).
@@ -245,7 +245,7 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription).
@@ -285,7 +285,7 @@ func TestCreateJob(t *testing.T) {
 			Ended:   utils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
 			Status:  "jobstatus",
 		}
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription).
@@ -317,7 +317,7 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(gomock.Any()).
@@ -347,7 +347,7 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		anyKind, anyName := "anyKind", "anyName"
 		jobHandler.
 			EXPECT().
@@ -379,7 +379,7 @@ func TestCreateJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobScheduleDescription := models.JobScheduleDescription{}
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			CreateJob(&jobScheduleDescription).
@@ -411,7 +411,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -437,7 +437,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -464,7 +464,7 @@ func TestDeleteJob(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		jobName := "anyjob"
-		jobHandler := jobMock.NewMockJobHandler(ctrl)
+		jobHandler := mock.NewMockJobHandler(ctrl)
 		jobHandler.
 			EXPECT().
 			DeleteJob(jobName).
@@ -472,6 +472,87 @@ func TestDeleteJob(t *testing.T) {
 			Times(1)
 		controllerTestUtils := setupTest(jobHandler)
 		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/jobs/%s", jobName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
+		}
+	})
+}
+
+func TestStopJob(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		jobName := "anyjob"
+		jobHandler := mock.NewMockJobHandler(ctrl)
+		jobHandler.
+			EXPECT().
+			StopJob(jobName).
+			Return(nil).
+			Times(1)
+		controllerTestUtils := setupTest(jobHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/jobs/%s/stop", jobName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusOK, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusOK, returnedStatus.Code)
+			assert.Equal(t, models.StatusSuccess, returnedStatus.Status)
+			assert.Empty(t, returnedStatus.Reason)
+		}
+	})
+
+	t.Run("handler returning not found - 404 not found", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		jobName := "anyjob"
+		jobHandler := mock.NewMockJobHandler(ctrl)
+		jobHandler.
+			EXPECT().
+			StopJob(jobName).
+			Return(apiErrors.NewNotFound("job", jobName)).
+			Times(1)
+		controllerTestUtils := setupTest(jobHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/jobs/%s/stop", jobName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusNotFound, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
+			assert.Equal(t, apiErrors.NotFoundMessage("job", jobName), returnedStatus.Message)
+		}
+	})
+
+	t.Run("handler returning unhandled error - 500 internal server error", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		jobName := "anyjob"
+		jobHandler := mock.NewMockJobHandler(ctrl)
+		jobHandler.
+			EXPECT().
+			StopJob(jobName).
+			Return(errors.New("any error")).
+			Times(1)
+		controllerTestUtils := setupTest(jobHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/jobs/%s/stop", jobName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 

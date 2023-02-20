@@ -10,16 +10,16 @@ import (
 	commonUtils "github.com/equinor/radix-common/utils"
 	"github.com/equinor/radix-job-scheduler-server/api/utils/test"
 	apiErrors "github.com/equinor/radix-job-scheduler/api/errors"
-	batchApi "github.com/equinor/radix-job-scheduler/api/v1/batches"
-	batchMock "github.com/equinor/radix-job-scheduler/api/v1/batches/mock"
+	api "github.com/equinor/radix-job-scheduler/api/v1/batches"
+	"github.com/equinor/radix-job-scheduler/api/v1/batches/mock"
 	models "github.com/equinor/radix-job-scheduler/models/common"
 	modelsV1 "github.com/equinor/radix-job-scheduler/models/v1"
-	v1 "github.com/equinor/radix-operator/pkg/apis/radix/v1"
+	"github.com/equinor/radix-operator/pkg/apis/radix/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupTest(handler batchApi.BatchHandler) *test.ControllerTestUtils {
+func setupTest(handler api.BatchHandler) *test.ControllerTestUtils {
 	controller := batchController{handler: handler}
 	controllerTestUtils := test.New(&controller)
 	return &controllerTestUtils
@@ -30,7 +30,7 @@ func TestGetBatches(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchState := modelsV1.BatchStatus{
 			JobStatus: modelsV1.JobStatus{
 				Name:    "batchname",
@@ -66,7 +66,7 @@ func TestGetBatches(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			GetBatches().
@@ -95,7 +95,7 @@ func TestGetBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "batchname"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchState := modelsV1.BatchStatus{
 			JobStatus: modelsV1.JobStatus{
 				Name:    batchName,
@@ -131,7 +131,7 @@ func TestGetBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName, kind := "anybatch", "batch"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			GetBatch(gomock.Any()).
@@ -158,7 +158,7 @@ func TestGetBatch(t *testing.T) {
 		t.Parallel()
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			GetBatch(gomock.Any()).
@@ -195,7 +195,7 @@ func TestCreateBatch(t *testing.T) {
 				Status:  "batchstatus",
 			},
 		}
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -257,7 +257,7 @@ func TestCreateBatch(t *testing.T) {
 				Status:  "batchstatus",
 			},
 		}
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -301,7 +301,7 @@ func TestCreateBatch(t *testing.T) {
 				Status:  "batchstatus",
 			},
 		}
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -333,7 +333,7 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(gomock.Any()).
@@ -363,7 +363,7 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchScheduleDescription := models.BatchScheduleDescription{}
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		anyKind, anyName := "anyKind", "anyName"
 		batchHandler.
 			EXPECT().
@@ -395,7 +395,7 @@ func TestCreateBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchScheduleDescription := models.BatchScheduleDescription{}
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			CreateBatch(&batchScheduleDescription).
@@ -427,7 +427,7 @@ func TestDeleteBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "anybatch"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
@@ -453,7 +453,7 @@ func TestDeleteBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "anybatch"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
@@ -480,7 +480,7 @@ func TestDeleteBatch(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		batchName := "anybatch"
-		batchHandler := batchMock.NewMockBatchHandler(ctrl)
+		batchHandler := mock.NewMockBatchHandler(ctrl)
 		batchHandler.
 			EXPECT().
 			DeleteBatch(batchName).
@@ -488,6 +488,179 @@ func TestDeleteBatch(t *testing.T) {
 			Times(1)
 		controllerTestUtils := setupTest(batchHandler)
 		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodDelete, fmt.Sprintf("/api/v1/batches/%s", batchName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
+		}
+	})
+}
+
+func TestStopBatch(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "anybatch"
+		batchHandler := mock.NewMockBatchHandler(ctrl)
+		batchHandler.
+			EXPECT().
+			StopBatch(batchName).
+			Return(nil).
+			Times(1)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/batches/%s/stop", batchName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusOK, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusOK, returnedStatus.Code)
+			assert.Equal(t, models.StatusSuccess, returnedStatus.Status)
+			assert.Empty(t, returnedStatus.Reason)
+		}
+	})
+
+	t.Run("handler returning not found - 404 not found", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "anybatch"
+		batchHandler := mock.NewMockBatchHandler(ctrl)
+		batchHandler.
+			EXPECT().
+			StopBatch(batchName).
+			Return(apiErrors.NewNotFound("batch", batchName)).
+			Times(1)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/batches/%s/stop", batchName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusNotFound, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
+			assert.Equal(t, apiErrors.NotFoundMessage("batch", batchName), returnedStatus.Message)
+		}
+	})
+
+	t.Run("handler returning unhandled error - 500 internal server error", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "anybatch"
+		batchHandler := mock.NewMockBatchHandler(ctrl)
+		batchHandler.
+			EXPECT().
+			StopBatch(batchName).
+			Return(errors.New("any error")).
+			Times(1)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/batches/%s/stop", batchName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
+		}
+	})
+}
+
+func TestStopBatchJob(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "anybatch"
+		jobName := "anyjob"
+		batchHandler := mock.NewMockBatchHandler(ctrl)
+		batchHandler.
+			EXPECT().
+			StopBatchJob(batchName, jobName).
+			Return(nil).
+			Times(1)
+		batchHandler.
+			EXPECT().
+			MaintainHistoryLimit().
+			Return(nil).
+			AnyTimes()
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/batches/%s/jobs/%s/stop", batchName, jobName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusOK, response.StatusCode)
+			var returnedStatus models.Status
+			err := test.GetResponseBody(response, &returnedStatus)
+			if err != nil {
+				panic(err)
+			}
+			assert.Equal(t, http.StatusOK, returnedStatus.Code)
+			assert.Equal(t, models.StatusSuccess, returnedStatus.Status)
+			assert.Empty(t, returnedStatus.Reason)
+		}
+	})
+
+	t.Run("handler returning not found - 404 not found", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "anybatch"
+		jobName := "anyjob"
+		batchHandler := mock.NewMockBatchHandler(ctrl)
+		batchHandler.
+			EXPECT().
+			StopBatchJob(batchName, jobName).
+			Return(apiErrors.NewNotFound("batch", batchName)).
+			Times(1)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/batches/%s/jobs/%s/stop", batchName, jobName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusNotFound, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
+			assert.Equal(t, apiErrors.NotFoundMessage("batch", batchName), returnedStatus.Message)
+		}
+	})
+
+	t.Run("handler returning unhandled error - 500 internal server error", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "anybatch"
+		jobName := "anyjob"
+		batchHandler := mock.NewMockBatchHandler(ctrl)
+		batchHandler.
+			EXPECT().
+			StopBatchJob(batchName, jobName).
+			Return(errors.New("any error")).
+			Times(1)
+		controllerTestUtils := setupTest(batchHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodPost, fmt.Sprintf("/api/v1/batches/%s/jobs/%s/stop", batchName, jobName))
 		response := <-responseChannel
 		assert.NotNil(t, response)
 

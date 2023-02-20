@@ -53,6 +53,11 @@ func (controller *jobController) GetRoutes() models.Routes {
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteJob,
 		},
+		models.Route{
+			Path:        fmt.Sprintf("/jobs/{%s}/stop", jobNameParam),
+			Method:      http.MethodPost,
+			HandlerFunc: controller.StopJob,
+		},
 	}
 	return routes
 }
@@ -205,6 +210,45 @@ func (controller *jobController) DeleteJob(w http.ResponseWriter, r *http.Reques
 		Status:  apiModels.StatusSuccess,
 		Code:    http.StatusOK,
 		Message: fmt.Sprintf("job %s successfully deleted", jobName),
+	}
+	utils.StatusResponse(w, &status)
+}
+
+// swagger:operation POST /jobs/{jobName}/stop Job stopJob
+// ---
+// summary: Stop job
+// parameters:
+// - name: jobName
+//   in: path
+//   description: Name of job
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful delete job"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *jobController) StopJob(w http.ResponseWriter, r *http.Request) {
+	jobName := mux.Vars(r)[jobNameParam]
+
+	err := controller.handler.StopJob(jobName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+
+	status := apiModels.Status{
+		Status:  apiModels.StatusSuccess,
+		Code:    http.StatusOK,
+		Message: fmt.Sprintf("job %s was successfully stopped", jobName),
 	}
 	utils.StatusResponse(w, &status)
 }
