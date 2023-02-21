@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/equinor/radix-common v1.2.7
-	github.com/equinor/radix-job-scheduler v1.7.5-0.20230217171308-3ce1e1c893b2
+	github.com/equinor/radix-job-scheduler v1.7.5-0.20230221075140-98d119711c86
 	github.com/equinor/radix-operator v1.32.3
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/handlers v1.5.1

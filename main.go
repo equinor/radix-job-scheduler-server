@@ -32,10 +32,11 @@ func main() {
 	parseFlagsFromArgs(fs)
 
 	errs := make(chan error)
+	kubeUtil := getKubeUtil()
 
 	go func() {
 		log.Infof("Radix job scheduler API is serving on port %s", *port)
-		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, getControllers(env)...)))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, getControllers(kubeUtil, env)...)))
 		errs <- err
 	}()
 
@@ -45,12 +46,16 @@ func main() {
 	}
 }
 
-func getControllers(env *apiModels.Env) []models.Controller {
+func getKubeUtil() *kube.Kube {
 	kubeClient, radixClient, _, secretProviderClient := utils.GetKubernetesClient()
 	kubeUtil, _ := kube.New(kubeClient, radixClient, secretProviderClient)
+	return kubeUtil
+}
+
+func getControllers(kubeUtil *kube.Kube, env *apiModels.Env) []models.Controller {
 	return []models.Controller{
-		jobControllers.New(jobApi.New(env, kubeUtil)),
-		batchControllers.New(batchApi.New(env, kubeUtil, kubeClient, radixClient)),
+		jobControllers.New(jobApi.New(kubeUtil, env)),
+		batchControllers.New(batchApi.New(kubeUtil, env)),
 	}
 }
 
