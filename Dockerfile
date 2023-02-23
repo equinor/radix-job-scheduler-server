@@ -26,7 +26,7 @@ RUN go mod download
 COPY . .
 
 # Generate swagger
-RUN swagger generate spec -o ./swaggerui_src/swagger.json --scan-models && \
+RUN swagger generate spec -o ./swaggerui_src/swagger.json --scan-models -x github.com/equinor/radix-job-scheduler/models/v2 && \
     swagger validate ./swaggerui_src/swagger.json && \
     statik -src=./swaggerui_src/ -p swaggerui
 
