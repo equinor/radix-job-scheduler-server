@@ -54,6 +54,7 @@ func TestGetJobs(t *testing.T) {
 			test.GetResponseBody(response, &returnedJobs)
 			assert.Len(t, returnedJobs, 1)
 			assert.Equal(t, jobState.Name, returnedJobs[0].Name)
+			assert.Equal(t, "", returnedJobs[0].BatchName)
 			assert.Equal(t, jobState.Started, returnedJobs[0].Started)
 			assert.Equal(t, jobState.Ended, returnedJobs[0].Ended)
 			assert.Equal(t, jobState.Status, returnedJobs[0].Status)
@@ -116,6 +117,7 @@ func TestGetJob(t *testing.T) {
 			var returnedJob modelsV1.JobStatus
 			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, jobState.Name, returnedJob.Name)
+			assert.Equal(t, "", returnedJob.BatchName)
 			assert.Equal(t, jobState.Started, returnedJob.Started)
 			assert.Equal(t, jobState.Ended, returnedJob.Ended)
 			assert.Equal(t, jobState.Status, returnedJob.Status)
@@ -210,6 +212,7 @@ func TestCreateJob(t *testing.T) {
 			var returnedJob modelsV1.JobStatus
 			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, createdJob.Name, returnedJob.Name)
+			assert.Equal(t, "", returnedJob.BatchName)
 			assert.Equal(t, createdJob.Started, returnedJob.Started)
 			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
 			assert.Equal(t, createdJob.Status, returnedJob.Status)
@@ -266,6 +269,7 @@ func TestCreateJob(t *testing.T) {
 			var returnedJob modelsV1.JobStatus
 			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, createdJob.Name, returnedJob.Name)
+			assert.Equal(t, "", returnedJob.BatchName)
 			assert.Equal(t, createdJob.Started, returnedJob.Started)
 			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
 			assert.Equal(t, createdJob.Status, returnedJob.Status)
@@ -306,6 +310,7 @@ func TestCreateJob(t *testing.T) {
 			var returnedJob modelsV1.JobStatus
 			test.GetResponseBody(response, &returnedJob)
 			assert.Equal(t, createdJob.Name, returnedJob.Name)
+			assert.Equal(t, "", returnedJob.BatchName)
 			assert.Equal(t, createdJob.Started, returnedJob.Started)
 			assert.Equal(t, createdJob.Ended, returnedJob.Ended)
 			assert.Equal(t, createdJob.Status, returnedJob.Status)
