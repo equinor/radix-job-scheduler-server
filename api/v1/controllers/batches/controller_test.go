@@ -674,3 +674,94 @@ func TestStopBatchJob(t *testing.T) {
 		}
 	})
 }
+
+func TestGetBatchJob(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		batchName := "batch-name1"
+		jobName := "jobname"
+		jobHandler := mock.NewMockBatchHandler(ctrl)
+		jobState := modelsV1.JobStatus{
+			Name:    jobName,
+			Started: commonUtils.FormatTimestamp(time.Now()),
+			Ended:   commonUtils.FormatTimestamp(time.Now().Add(1 * time.Minute)),
+			Status:  "jobstatus",
+		}
+		jobHandler.
+			EXPECT().
+			GetBatchJob(batchName, jobName).
+			Return(&jobState, nil).
+			Times(1)
+
+		controllerTestUtils := setupTest(jobHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s/jobs/%s", batchName, jobName))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusOK, response.StatusCode)
+			var returnedJob modelsV1.JobStatus
+			test.GetResponseBody(response, &returnedJob)
+			assert.Equal(t, jobState.Name, returnedJob.Name)
+			assert.Equal(t, jobState.Started, returnedJob.Started)
+			assert.Equal(t, jobState.Ended, returnedJob.Ended)
+			assert.Equal(t, jobState.Status, returnedJob.Status)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		jobName, kind := "anyjob", "job"
+		jobHandler := mock.NewMockBatchHandler(ctrl)
+		jobHandler.
+			EXPECT().
+			GetBatchJob(gomock.Any(), gomock.Any()).
+			Return(nil, apiErrors.NewNotFound(kind, jobName)).
+			Times(1)
+
+		controllerTestUtils := setupTest(jobHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s/jobs/%s", "anybatch", "anyjob"))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusNotFound, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusNotFound, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonNotFound, returnedStatus.Reason)
+			assert.Equal(t, apiErrors.NotFoundMessage(kind, jobName), returnedStatus.Message)
+		}
+	})
+
+	t.Run("internal error", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		jobHandler := mock.NewMockBatchHandler(ctrl)
+		jobHandler.
+			EXPECT().
+			GetBatchJob(gomock.Any(), gomock.Any()).
+			Return(nil, errors.New("unhandled error")).
+			Times(1)
+
+		controllerTestUtils := setupTest(jobHandler)
+		responseChannel := controllerTestUtils.ExecuteRequest(http.MethodGet, fmt.Sprintf("/api/v1/batches/%s/jobs/%s", "anybatch", "anyjob"))
+		response := <-responseChannel
+		assert.NotNil(t, response)
+
+		if response != nil {
+			assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
+			var returnedStatus models.Status
+			test.GetResponseBody(response, &returnedStatus)
+			assert.Equal(t, http.StatusInternalServerError, returnedStatus.Code)
+			assert.Equal(t, models.StatusFailure, returnedStatus.Status)
+			assert.Equal(t, models.StatusReasonUnknown, returnedStatus.Reason)
+		}
+	})
+}

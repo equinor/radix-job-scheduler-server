@@ -52,6 +52,11 @@ func (controller *batchController) GetRoutes() models.Routes {
 			HandlerFunc: controller.GetBatch,
 		},
 		models.Route{
+			Path:        fmt.Sprintf("/batches/{%s}/jobs/{%s}", batchNameParam, jobNameParam),
+			Method:      http.MethodGet,
+			HandlerFunc: controller.GetBatchJob,
+		},
+		models.Route{
 			Path:        fmt.Sprintf("/batches/{%s}", batchNameParam),
 			Method:      http.MethodDelete,
 			HandlerFunc: controller.DeleteBatch,
@@ -181,6 +186,45 @@ func (controller *batchController) GetBatch(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	utils.JSONResponse(w, batch)
+}
+
+// swagger:operation GET /batches/{batchName}/jobs/{jobName} Batch getBatchJob
+// ---
+// summary: Gets batch job
+// parameters:
+// - name: batchName
+//   in: path
+//   description: Name of batch
+//   type: string
+//   required: true
+// - name: jobName
+//   in: path
+//   description: Name of job
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     description: "Successful get job"
+//     schema:
+//        "$ref": "#/definitions/JobStatus"
+//   "404":
+//     description: "Not found"
+//     schema:
+//        "$ref": "#/definitions/Status"
+//   "500":
+//     description: "Internal server error"
+//     schema:
+//        "$ref": "#/definitions/Status"
+func (controller *batchController) GetBatchJob(w http.ResponseWriter, r *http.Request) {
+	batchName := mux.Vars(r)[batchNameParam]
+	jobName := mux.Vars(r)[jobNameParam]
+	log.Debugf("Get job %s from the batch %s", jobName, batchName)
+	job, err := controller.handler.GetBatchJob(batchName, jobName)
+	if err != nil {
+		controller.HandleError(w, err)
+		return
+	}
+	utils.JSONResponse(w, job)
 }
 
 // swagger:operation DELETE /batches/{batchName} Batch deleteBatch
