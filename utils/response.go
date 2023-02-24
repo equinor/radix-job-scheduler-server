@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/equinor/radix-job-scheduler/models"
+	models "github.com/equinor/radix-job-scheduler/models/common"
 )
 
 func JSONResponse(w http.ResponseWriter, result interface{}) {

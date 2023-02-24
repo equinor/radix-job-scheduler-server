@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"os"
 
-	batchControllers "github.com/equinor/radix-job-scheduler-server/api/controllers/batches"
-	jobControllers "github.com/equinor/radix-job-scheduler-server/api/controllers/jobs"
+	batchControllers "github.com/equinor/radix-job-scheduler-server/api/v1/controllers/batches"
+	jobControllers "github.com/equinor/radix-job-scheduler-server/api/v1/controllers/jobs"
 	"github.com/equinor/radix-job-scheduler-server/models"
 	"github.com/equinor/radix-job-scheduler-server/router"
 	_ "github.com/equinor/radix-job-scheduler-server/swaggerui"
-	batchApi "github.com/equinor/radix-job-scheduler/api/batches"
-	jobApi "github.com/equinor/radix-job-scheduler/api/jobs"
+	batchApi "github.com/equinor/radix-job-scheduler/api/v1/batches"
+	jobApi "github.com/equinor/radix-job-scheduler/api/v1/jobs"
 	apiModels "github.com/equinor/radix-job-scheduler/models"
 	"github.com/equinor/radix-operator/pkg/apis/kube"
 	"github.com/equinor/radix-operator/pkg/apis/utils"
@@ -32,10 +32,11 @@ func main() {
 	parseFlagsFromArgs(fs)
 
 	errs := make(chan error)
+	kubeUtil := getKubeUtil()
 
 	go func() {
 		log.Infof("Radix job scheduler API is serving on port %s", *port)
-		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, getControllers(env)...)))
+		err := http.ListenAndServe(fmt.Sprintf(":%s", *port), handlers.CombinedLoggingHandler(os.Stdout, router.NewServer(env, getControllers(kubeUtil, env)...)))
 		errs <- err
 	}()
 
@@ -45,13 +46,16 @@ func main() {
 	}
 }
 
-func getControllers(env *apiModels.Env) []models.Controller {
+func getKubeUtil() *kube.Kube {
 	kubeClient, radixClient, _, secretProviderClient := utils.GetKubernetesClient()
 	kubeUtil, _ := kube.New(kubeClient, radixClient, secretProviderClient)
+	return kubeUtil
+}
 
+func getControllers(kubeUtil *kube.Kube, env *apiModels.Env) []models.Controller {
 	return []models.Controller{
-		jobControllers.New(jobApi.New(env, kubeUtil)),
-		batchControllers.New(batchApi.New(env, kubeUtil, kubeClient, radixClient)),
+		jobControllers.New(jobApi.New(kubeUtil, env)),
+		batchControllers.New(batchApi.New(kubeUtil, env)),
 	}
 }
 

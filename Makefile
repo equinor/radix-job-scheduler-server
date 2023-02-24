@@ -30,7 +30,7 @@ test:
 .PHONY: swagger
 swagger:
 	rm -f ./swaggerui_src/swagger.json ./swaggerui/statik.go
-	swagger generate spec -o ./swagger.json --scan-models
+	swagger generate spec -o ./swagger.json --scan-models -x github.com/equinor/radix-job-scheduler/models/v2
 	mv swagger.json ./swaggerui_src/swagger.json
 	swagger validate ./swaggerui_src/swagger.json && \
 	statik -src=./swaggerui_src/ -p swaggerui
@@ -50,3 +50,7 @@ docker-push-main:
 	docker build -t $(DOCKER_REGISTRY)/radix-job-scheduler-server:main-latest -f Dockerfile .
 	az acr login --name $(CONTAINER_REPO)
 	docker push $(DOCKER_REGISTRY)/radix-job-scheduler-server:main-latest
+
+.HONY: staticcheck
+staticcheck:
+	staticcheck `go list ./...` && go vet `go list ./...`

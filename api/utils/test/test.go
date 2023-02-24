@@ -28,7 +28,7 @@ func (ctrl *ControllerTestUtils) ExecuteRequest(method, path string) <-chan *htt
 	return ctrl.ExecuteRequestWithBody(method, path, nil)
 }
 
-// ExecuteRequest Helper method to issue a http request
+// ExecuteRequestWithBody Helper method to issue a http request with body
 func (ctrl *ControllerTestUtils) ExecuteRequestWithBody(method, path string, body interface{}) <-chan *http.Response {
 	responseChan := make(chan *http.Response)
 
@@ -40,12 +40,18 @@ func (ctrl *ControllerTestUtils) ExecuteRequestWithBody(method, path string, bod
 			reader = bytes.NewReader(payload)
 		}
 
-		router := router.NewServer(schedulerModels.NewEnv(), ctrl.controllers...)
-		server := httptest.NewServer(router)
+		serverRouter := router.NewServer(schedulerModels.NewEnv(), ctrl.controllers...)
+		server := httptest.NewServer(serverRouter)
 		defer server.Close()
-		url := buildURLFromServer(server, path)
-		request, _ := http.NewRequest(method, url, reader)
-		response, _ := http.DefaultClient.Do(request)
+		serverUrl := buildURLFromServer(server, path)
+		request, err := http.NewRequest(method, serverUrl, reader)
+		if err != nil {
+			panic(err)
+		}
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			panic(err)
+		}
 		responseChan <- response
 		close(responseChan)
 	}()
@@ -61,7 +67,7 @@ func GetResponseBody(response *http.Response, target interface{}) error {
 }
 
 func buildURLFromServer(server *httptest.Server, path string) string {
-	url, _ := url.Parse(server.URL)
-	url.Path = path
-	return url.String()
+	serverUrl, _ := url.Parse(server.URL)
+	serverUrl.Path = path
+	return serverUrl.String()
 }
