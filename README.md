@@ -1,3 +1,5 @@
+![build workflow](https://github.com/equinor/radix-job-scheduler-server/actions/workflows/build-push.yml/badge.svg) 
+
 # Radix job scheduler server
 The job scheduler server for application jobs
 
@@ -42,3 +44,11 @@ By default `Info` and `Error` messages are logged. This can be configured via en
 
 By default `swagger UI` is not available. This can be configured via environment variable `USE_SWAGGER`
 * `USE_SWAGGER=true` - allows to use swagger UI with URL `<api-endpoint>/swaggerui`
+
+## Contribution
+
+Want to contribute? Read our [contributing guidelines](./CONTRIBUTING.md)
+
+## Security
+
+This is how we handle [security issues](./SECURITY.md)
