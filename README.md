@@ -1,4 +1,8 @@
 # Radix job scheduler server
+
+# This project is now archived - 2023.11.13
+This repository is not longer in use, code merged into radix-job-scheduler
+
 The job scheduler server for application jobs
 
 ## Usage
